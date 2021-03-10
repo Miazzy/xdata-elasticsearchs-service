@@ -42,7 +42,7 @@ namespace: 'public',
 serviceName: 'xdata-elasticsearch-service',
 ```
 
-这个是Nacos的注册地址，如果不用请app.config.elasticsearchsync.register设置为false,默认是启用，提供elasticsearch服务的微服务集群。如果要用请自行搭建好nacos集群，将地址改写到serverList中。
+这个是Nacos的注册地址，如果不用请将配置app.config.elasticsearchsync.register设置为false,默认是启用，提供elasticsearch服务的微服务集群。如果要用请自行搭建好nacos集群，将地址改写到serverList中。
 
 ### Development
 
