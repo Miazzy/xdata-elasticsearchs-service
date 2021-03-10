@@ -48,17 +48,24 @@ class ElasticSearchController extends Controller {
 
         const { ctx, app } = this;
 
-        // 获取部门编号
+        // 获取Database名称或Index名称
         const schema = ctx.query.schema || ctx.params.schema || 'workspace';
-        // 获取部门编号
+        // 获取表名称或Type名称
         const type = ctx.query.type || ctx.params.type || 'type';
-
-        // 获取部门编号
+        // 获取查询条件
         const content = ctx.query.data || ctx.params.data || ctx.query.content || ctx.params.content || '{}';
 
+        //获取通用查询条件，Page，Size，排序条件等
+
+        //将查询条件，Page，Size，排序条件等转化为SQL
+
+        //将SQL转化为ElasticSearch DSL
+
+        //执行DSL查询
+
+        //返回查询结果
+
         try {
-            //const data = JSON.parse(content);
-            console.log(content);
             ctx.body = await app.elasticsearch.search({
                 index: schema,
                 type,
@@ -68,7 +75,6 @@ class ElasticSearchController extends Controller {
                     }
                 },
             });
-
             // {
             //     "from" : 100, 
             //     "size" : 100,
