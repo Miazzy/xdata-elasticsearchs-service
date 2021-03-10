@@ -28,6 +28,7 @@ job1: {
 },
 ```
 
+配置完成后，请在本地浏览器上输入`http://127.0.0.1:8001/api/es/elasticsearch/sync`执行同步操作，每请求一次，从上次记录的pindex开始，同步200条数据，每次同步条数可以修改，但建议200条，貌似elasticsearch里面有个接收请求的队列打大小默认设置200，如果每次通过过多，elasticsearch可能会拒绝请求。
 
 ### Development
 
@@ -43,85 +44,119 @@ $ npm start  // 启动项目
 $ npm stop   // 停止项目
 ```
 
-### MySQL backup user info
 
-- 备份脚本
-```# 执行备份脚本
-/root/mysqldump/backupmysql.sh;
+### ElasticSearch启动脚本
 
-# 执行备份数据版本控制
-cd /root/backups/mysql;
-git add . ; git commit -m 'init';
-
-# 提交备份数据至git仓库
-git push --force;
 ```
-
-- 备份参数
-```
-DBNAMES[0]="jeecg-boot" # databases you want to backup, separated by a space; leave empty to backup all databases on this host
-DBUSER[0]="mysqldumpuser"  # MySQL username
-DBPASS[0]="mysqldumpuser"  # MySQL password
-DBHOST[0]="172.18.254.95"  # your MySQL server's location (IP address is best)
-DBPORT[0]="3309"  # MySQL port
-DBTABLES[0]="" # tables you want to backup or exclude, separated by a space; leave empty to back up all tables
-DBTABLESMATCH[0]="include" # include will backup ONLY the tables in DBTABLES, exclude will backup all tables BUT those in DBTABLES
-DBOPTIONS[0]="--quick --single-transaction"
-```
-
-### etcd install shell
-```js
-ETCD_VER=v3.4.14
-
-# choose either URL
-GOOGLE_URL=https://storage.googleapis.com/etcd
-GITHUB_URL=https://github.com/etcd-io/etcd/releases/download
-DOWNLOAD_URL=${GITHUB_URL}
-
-rm -f /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
-rm -rf /tmp/etcd && mkdir -p /tmp/etcd
-
-curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
-tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd --strip-components=1
-rm -f /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
-
-/tmp/etcd/etcd --version
-/tmp/etcd/etcdctl version
-```
-
-```yml
-version: '2'
-networks:
-  byfn:
-
+version: '3.7'
 services:
-  etcd1:
-    image: quay.io/coreos/etcd
-    container_name: etcd1
-    command: etcd -name etcd1 -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379 -listen-peer-urls http://0.0.0.0:2380 -initial-cluster-token etcd-cluster -initial-cluster "etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380" -initial-cluster-state new
-    ports:
-      - 2379
-      - 2380
+  elasticsearch1:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
+    container_name: elasticsearch1
+    environment:
+      - node.name=elasticsearch1
+      - network.publish_host=elasticsearch1
+      - cluster.name=docker-cluster
+      - cluster.initial_master_nodes=elasticsearch1,elasticsearch2,elasticsearch3
+      - "discovery.seed_hosts=elasticsearch1,elasticsearch2,elasticsearch3"
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms256M -Xmx256M"
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - network.host=0.0.0.0
+    ulimits:
+      nproc: 65535
+      memlock:
+        soft: -1
+        hard: -1
+    volumes: #restart: always
+      - type: volume
+        source: logs
+        target: /var/log
+      - type: volume
+        source: esearchdata1
+        target: /usr/share/elasticsearch/data
     networks:
-      - byfn
+      - elastic
+    ports:
+      - 9200:9200
+      - 9300:9300
 
-  etcd2:
-    image: quay.io/coreos/etcd
-    container_name: etcd2
-    command: etcd -name etcd2 -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379 -listen-peer-urls http://0.0.0.0:2380 -initial-cluster-token etcd-cluster -initial-cluster "etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380" -initial-cluster-state new
-    ports:
-      - 2379
-      - 2380
+  elasticsearch2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
+    container_name: elasticsearch2
+    environment:
+      - node.name=elasticsearch2
+      - network.publish_host=elasticsearch2
+      - cluster.name=docker-cluster
+      - cluster.initial_master_nodes=elasticsearch1,elasticsearch2,elasticsearch3
+      - "discovery.seed_hosts=elasticsearch1,elasticsearch2,elasticsearch3"
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms256M -Xmx256M"  #- "discovery.zen.ping.unicast.hosts=elasticsearch1"
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - network.host=0.0.0.0
+    ulimits:
+      nproc: 65535
+      memlock:
+        soft: -1
+        hard: -1
+    cap_add:
+      - ALL
+    volumes: #restart: always
+      - type: volume
+        source: logs
+        target: /var/log
+      - type: volume
+        source: esearchdata2
+        target: /usr/share/elasticsearch/data
     networks:
-      - byfn
+      - elastic
+    ports:
+      - 9201:9200
+      - 9301:9300
 
-  etcd3:
-    image: quay.io/coreos/etcd
-    container_name: etcd3
-    command: etcd -name etcd3 -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379 -listen-peer-urls http://0.0.0.0:2380 -initial-cluster-token etcd-cluster -initial-cluster "etcd1=http://etcd1:2380,etcd2=http://etcd2:2380,etcd3=http://etcd3:2380" -initial-cluster-state new
-    ports:
-      - 2379
-      - 2380
+  elasticsearch3:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.8.0
+    container_name: elasticsearch3
+    environment:
+      - node.name=elasticsearch3
+      - network.publish_host=elasticsearch3
+      - cluster.name=docker-cluster
+      - cluster.initial_master_nodes=elasticsearch1,elasticsearch2,elasticsearch3
+      - "discovery.seed_hosts=elasticsearch1,elasticsearch2,elasticsearch3"
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms256M -Xmx256M" #- "discovery.zen.ping.unicast.hosts=elasticsearch1"
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - network.host=0.0.0.0
+    ulimits:
+      nproc: 65535
+      memlock:
+        soft: -1
+        hard: -1
+    cap_add:
+      - ALL
+    volumes: #restart: always
+      - type: volume
+        source: logs
+        target: /var/log
+      - type: volume
+        source: esearchdata3
+        target: /usr/share/elasticsearch/data
     networks:
-      - byfn
+      - elastic
+    ports:
+      - 9202:9200
+      - 9302:9300
+
+volumes:
+  esearchdata1:
+  esearchdata2:
+  esearchdata3:
+  logs:
+
+networks:
+  elastic:
 ```
+将上述脚本保存为docker-compose.yml,最好在一个新的目录中，然后执行`docker-compose -f docker-compose.yml up -d`即可，第一次要拉取docker镜像等待时间较长。如果未安装docker及docker-compose请及时安装后执行上述操作。
