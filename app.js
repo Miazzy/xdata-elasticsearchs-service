@@ -99,16 +99,19 @@ module.exports = app => {
                 console.log(Constants.ROOT.toString());
             }
         }
-        // 注册 elasticsearch 服务
-        if (app.config.elasticsearchsync.register) {
+        // 启用 elasticsearch 服务
+        if (app.config.elasticsearchsync.status) {
             console.log('egg service start & register elasticsearch sync rules ... ');
 
-            const client = new nacos.NacosNamingClient(app.config.elasticsearchsync);
-            await client.ready();
-            await client.registerInstance(app.config.elasticsearchsync.serviceName, {
-                ip: getIpAddress(),
-                port: app.options.port || 8001,
-            });
+            // NACOS中注册 elasticsearch 服务
+            if (app.config.elasticsearchsync.register) {
+                const client = new nacos.NacosNamingClient(app.config.elasticsearchsync);
+                await client.ready();
+                await client.registerInstance(app.config.elasticsearchsync.serviceName, {
+                    ip: getIpAddress(),
+                    port: app.options.port || 8001,
+                });
+            }
 
             var serverOptions = {
                 host: app.config.elasticsearchsync.es.host,

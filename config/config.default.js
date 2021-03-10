@@ -202,6 +202,7 @@ module.exports = appInfo => {
     };
 
     config.elasticsearchsync = {
+        status: true,
         register: true,
         logger: console,
         serverList: ['172.18.1.50:8848', '172.18.1.50:8849', '172.18.1.50:8850'], // replace to real nacos serverList

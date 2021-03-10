@@ -34,6 +34,16 @@ job1: {
 
 配置完成后，请在本地浏览器上输入`http://127.0.0.1:8001/api/es/elasticsearch/sync`执行同步操作，每请求一次，从上次记录的pindex开始，同步200条数据，每次同步条数可以修改，但建议200条，貌似elasticsearch里面有个接收请求的队列打大小默认设置200，如果每次通过过多，elasticsearch可能会拒绝请求。
 
+`
+register: true,
+logger: console,
+serverList: ['172.18.1.50:8848', '172.18.1.50:8849', '172.18.1.50:8850'], // replace to real nacos serverList
+namespace: 'public',
+serviceName: 'xdata-elasticsearch-service',
+`
+
+这个是Nacos的注册地址，如果不用请app.config.elasticsearchsync.register设置为false,默认是启用，提供elasticsearch服务的微服务集群。如果要用请自行搭建好nacos集群，将地址改写到serverList中。
+
 ### Development
 
 ```bash
