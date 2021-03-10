@@ -4,6 +4,10 @@
 
 const Controller = require('egg').Controller;
 
+/**
+ * @description 
+ * ElasticSearch同步服务控制器
+ */
 class EsSyncController extends Controller {
 
     /**
