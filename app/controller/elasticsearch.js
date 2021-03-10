@@ -17,7 +17,7 @@ class ElasticSearchController extends Controller {
 
         const { ctx, app } = this;
 
-        //限流组件，限流规则flowrule
+        // 限流组件 sentinel NodeJS版 ，限流规则flowrule
         app.sentinel.doLimitTask('flowrule', { ctx, app }, ({ ctx, app }) => { console.log('flowrule'); });
 
         console.log('pass flowrule!');
@@ -28,7 +28,7 @@ class ElasticSearchController extends Controller {
         const type = ctx.query.type || ctx.params.type || 'type';
         // 获取编号
         const id = ctx.query.id || ctx.params.id || 0;
-        // 获取部门编号
+        // 获取内容
         let content = ctx.query.data || ctx.params.data || ctx.query.content || ctx.params.content || '{}';
 
         // 如果是JSON格式，需将JSON格式还原

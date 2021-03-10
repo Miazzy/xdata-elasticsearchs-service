@@ -15,9 +15,9 @@ class EsSyncController extends Controller {
      */
     async index() {
         const { ctx, app } = this;
-        //限流组件，限流规则flowrule
+        // 限流组件 sentinel NodeJS版，限流规则flowrule
         app.sentinel.doLimitTask('flowrule', { ctx, app }, ({ ctx, app }) => { console.log('flowrule'); });
-        //限流验证通过，限流规则flowrule
+        // 限流验证通过，限流规则flowrule
         console.log('flowrule: pass flowrule!');
         // 获取任务编码
         const taskName = ctx.query.taskName || ctx.params.taskName || 'job1';
