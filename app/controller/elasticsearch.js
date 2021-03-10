@@ -4,6 +4,10 @@
 
 const Controller = require('egg').Controller;
 
+/**
+ * @description
+ * ElasticSearch增删改查服务控制器
+ */
 class ElasticSearchController extends Controller {
 
     /**
