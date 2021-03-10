@@ -1,4 +1,33 @@
-# xdata-rest-service
+# xdata-elasticsearch-service
+
+elasticsearch 同步服务，从MySQL上游同步至ES服务器
+
+在config.default配置上游MySQL访问地址信息等，下游ES连接地址、执行通过Task配置
+
+```js
+es: {
+    host: 'elasticsearch.yunwisdom.club:30080',
+    port: 30080,
+    apiVersion: '7.x',
+},
+mysql: {
+    host: '172.18.254.96',
+    port: '4000',
+    user: 'zhaoziyun',
+    password: 'ziyequma',
+    database: 'xdata',
+},
+job1: {
+    database: 'xdata',
+    index: 'xdata',
+    type: 'bs_seal_regist',
+    params: 'serialid',
+    sql: 'select * from ${index}.${type} where ${params} > :pindex order by ${params} asc limit 200',
+    dbtable: 'bs_sync_rec', //持久化记录表  
+    pindex: 0,
+},
+```
+
 
 ### Development
 

@@ -10,20 +10,14 @@ class EsSyncController extends Controller {
      * @function 数据库添加数据
      */
     async index() {
-
         const { ctx, app } = this;
-
         //限流组件，限流规则flowrule
         app.sentinel.doLimitTask('flowrule', { ctx, app }, ({ ctx, app }) => { console.log('flowrule'); });
-
         //限流验证通过，限流规则flowrule
         console.log('flowrule: pass flowrule!');
-
         // 获取任务编码
         const taskName = ctx.query.taskName || ctx.params.taskName || 'job1';
-
         try {
-
             const config = app.config.elasticsearchsync[taskName];
             //console.log(`elasticsearchsync config:`, JSON.stringify(config));
             const sql = config.sql.replace(/\${index}/g, config.database).replace(/\${type}/g, config.type).replace(/\${params}/g, config.params);
@@ -65,11 +59,10 @@ class EsSyncController extends Controller {
                 //讲pindex写入数据库
                 app.esMySQL.query(updateSQL, { pindex: config.pindex, index: config.index, type: config.type, params: config.params });
             }
-
             ctx.body = { err: 0, code: 0, success: true, pindex: config.pindex };
-
         } catch (error) {
             console.log(error);
+            ctx.body = { err: -99, code: -99, success: false, pindex: -1, message: error };
         }
 
     }
