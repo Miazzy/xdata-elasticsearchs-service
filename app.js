@@ -6,9 +6,13 @@ const Sentinel = require('xdata-sentinel/lib');
 const ElasticSearchClient = require('elasticsearchclient');
 const rds = require('ali-rds');
 const elasticsearch = require('elasticsearch');
+const base64Config = require('./config/base64.config');
+
+base64Config.init();
 
 const logger = console;
 logger.write = console.log;
+
 const sentinelClient = new Sentinel({
     appName: 'sentinel-test',
     async: true,
@@ -34,7 +38,6 @@ function doLimitTask(taskName, args, fn = () => {}) {
             console.log('block flowrule ... ');
             args.ctx.body = { err: 'block flowrule ...', code: -1 };
         }
-        // console.log('exec code error ... ', e);
         throw new Error();
     } finally {
         if (entry) {
@@ -80,18 +83,9 @@ function createESMySQLClient(config, app) {
 }
 
 module.exports = app => {
+
     // 开始前执行
     app.beforeStart(async() => {
-        // 注册 xdata-rest-service 服务
-        if (app.config.nacos.register) {
-            console.log('egg service start & init nacos client :' + JSON.stringify(app.config.nacos));
-            const client = new nacos.NacosNamingClient(app.config.nacos);
-            await client.ready();
-            await client.registerInstance(app.config.nacos.serviceName, {
-                ip: getIpAddress(),
-                port: app.options.port || 7001,
-            });
-        }
         // 注册 sentinel limit 限流服务
         if (app.config.sentinelLimit.status) {
             console.log('egg service start & load flow rules ... ');
@@ -105,7 +99,7 @@ module.exports = app => {
                 console.log(Constants.ROOT.toString());
             }
         }
-        // 注册 elasticsearch sync 服务
+        // 注册 elasticsearch 服务
         if (app.config.elasticsearchsync.register) {
             console.log('egg service start & register elasticsearch sync rules ... ');
 
@@ -113,7 +107,7 @@ module.exports = app => {
             await client.ready();
             await client.registerInstance(app.config.elasticsearchsync.serviceName, {
                 ip: getIpAddress(),
-                port: app.options.port || 7001,
+                port: app.options.port || 8001,
             });
 
             var serverOptions = {

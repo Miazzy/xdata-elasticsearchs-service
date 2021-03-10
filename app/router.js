@@ -3,16 +3,13 @@
 /* eslint-disable eol-last */
 'use strict';
 
-const base64Config = require('../config/base64.config');
-const dbConfig = require('../config/dbconfig');
 
 /**
  * @function init 执行初始化
  * @description Set up btoa/atob function with NodeJS
  */
 const init = () => {
-    base64Config.init();
-    // dbConfig.init();
+
 };
 
 /**
