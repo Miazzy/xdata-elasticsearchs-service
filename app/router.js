@@ -22,6 +22,12 @@ module.exports = app => {
     // elasticsearch 查询
     router.post('/api/es/search/:schema/:type', controller.elasticsearch.search);
 
+    // elasticsearch 查询
+    router.get('/api/es/search_offset/:schema/:type', controller.elasticsearch.searchByOffset);
+
+    // elasticsearch 查询
+    router.post('/api/es/search_offset/:schema/:type', controller.elasticsearch.searchByOffset);
+
     // elasticsearch 删除
     router.delete('/api/es/delete', controller.elasticsearch.delete);
 
