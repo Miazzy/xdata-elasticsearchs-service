@@ -101,6 +101,7 @@ class ElasticSearchController extends Controller {
      */
     async searchByOffset() {
 
+        // http://127.0.0.1:8001/api/es/search/xdata/bs_seal_regist?_where=(status,eq,已用印)~and(seal_group_ids,like,~zhaozy1028~)&_fields=id,filename,count,create_by,contract_id,serial_id&_sort=-id&_p=0&_size=10000
         const { ctx, app } = this;
 
         // 获取Database名称或Index名称
