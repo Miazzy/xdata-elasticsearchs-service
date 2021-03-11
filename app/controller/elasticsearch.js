@@ -73,7 +73,7 @@ class ElasticSearchController extends Controller {
         const page = ctx.query.page || ctx.query._page || ctx.query._p || 0;
         const size = ctx.query.size || ctx.query._size || ctx.query._s || 100;
         const offset = page * size;
-        const next = (parseInt(page) + 1) * size;
+        const next = size;
         const url = app.config.elasticsearchsync.es.host;
         const limits = ` limit ${next}`;
 
@@ -115,7 +115,7 @@ class ElasticSearchController extends Controller {
         const page = ctx.query.page || ctx.query._page || ctx.query._p || 0;
         const size = ctx.query.size || ctx.query._size || ctx.query._s || 100;
         const offset = page * size;
-        const next = (parseInt(page) + 1) * size;
+        const next = size;
         const url = app.config.elasticsearchsync.es.host;
 
         let wheresql = '';
@@ -131,7 +131,7 @@ class ElasticSearchController extends Controller {
         console.log(`sql: `, sql);
 
         //将SQL转化为ElasticSearch DSL
-        let params = await estools.convert(url,sql); //elasticsearch-plugin install https://hub.fastgit.org/NLPchina/elasticsearch-sql/releases/download/7.8.0.0/elasticsearch-sql-7.8.0.0.zip elasticsearch-plugin install https://hub.fastgit.org/NLPchina/elasticsearch-sql/releases/download/7.8.1.0/elasticsearch-sql-7.8.1.0.zip
+        let params = await estools.convert(url, sql); //elasticsearch-plugin install https://hub.fastgit.org/NLPchina/elasticsearch-sql/releases/download/7.8.0.0/elasticsearch-sql-7.8.0.0.zip elasticsearch-plugin install https://hub.fastgit.org/NLPchina/elasticsearch-sql/releases/download/7.8.1.0/elasticsearch-sql-7.8.1.0.zip
         params.from = offset;
         params.size = next;
         console.log(`convert:`, convert, ' params:', JSON.stringify(params));
