@@ -74,6 +74,7 @@ class ElasticSearchController extends Controller {
         const size = ctx.query.size || ctx.query._size || ctx.query._s || 100;
         const offset = page * size;
         const next = (parseInt(page) + 1) * size;
+        const url = app.config.elasticsearchsync.es.host;
 
         let wheresql = '';
         let orderby = '';
@@ -81,35 +82,30 @@ class ElasticSearchController extends Controller {
         //将查询条件，Page，Size，排序条件等转化为SQL
         wheresql = whereHelp.getWhereSQL(where, ' where ');
         orderby = order ? (order.startsWith('-') ? ` order by ${order.slice(1)} desc ` : ` order by ${order} asc `) : '';
-        //limits = ` limit ${offset} , ${next}`;
-
+        limits = ` limit ${next}`;
 
         //根据查收条件拼接查询SQL
-        const sql = `select ${fields} from ${schema}.${type} ${wheresql} ${orderby} `;
+        const sql = `select ${fields} from ${schema}_${type} ${wheresql} ${orderby} `;
         console.log(`sql: `, sql);
 
         //将SQL转化为ElasticSearch DSL
-        let params = await convert(sql); //elasticsearch-plugin install https://hub.fastgit.org/NLPchina/elasticsearch-sql/releases/download/7.8.0.0/elasticsearch-sql-7.8.0.0.zip elasticsearch-plugin install https://hub.fastgit.org/NLPchina/elasticsearch-sql/releases/download/7.8.1.0/elasticsearch-sql-7.8.1.0.zip
+        //let params = await convert(sql); //elasticsearch-plugin install https://hub.fastgit.org/NLPchina/elasticsearch-sql/releases/download/7.8.0.0/elasticsearch-sql-7.8.0.0.zip elasticsearch-plugin install https://hub.fastgit.org/NLPchina/elasticsearch-sql/releases/download/7.8.1.0/elasticsearch-sql-7.8.1.0.zip
         //params = JSON.parse(JSON.stringify(params).replace(/match/g, 'term'));
 
-        params.from = offset;
-        params.size = next;
+        // params.from = offset;
+        // params.size = next;
 
-        if (order) {
-            const sparam = new Object();
-            order.startsWith('-') ? sparam[order.slice(1)] = { "order": "desc" } : sparam[order] = { "order": "asc" };
-            params.sort = [sparam];
-        }
+        // if (order) {
+        //     const sparam = new Object();
+        //     order.startsWith('-') ? sparam[order.slice(1)] = { "order": "desc" } : sparam[order] = { "order": "asc" };
+        //     params.sort = [sparam];
+        // }
 
-        console.log(`convert:`, convert, ' params:', JSON.stringify(params));
+        // console.log(`convert:`, convert, ' params:', JSON.stringify(params));
 
         //执行DSL查询，返回查询结果
         try {
-            ctx.body = await app.elasticsearch.search({
-                index: `${schema}_${type}`,
-                type: type,
-                body: params,
-            });
+            ctx.body = estools.search(url, sql)
         } catch (error) {
             ctx.body = { err: -90, code: -1090, success: false, pindex: -1, message: error }
         }
