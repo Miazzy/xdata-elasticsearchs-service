@@ -11,7 +11,10 @@ const superagent = require('superagent');
  * @param {*} arr 
  */
 exports.convert = async(url, sql) => {
-    return await superagent.post('http://' + url + '/_sql/translate').send({ "query": sql }).set('accept', 'json');
+    const httpURL = 'http://' + url + '/_sql/translate';
+    const raw = { "query": sql };
+    const response = await superagent.post(httpURL).send(raw).set('Content-Type', 'application/json;charset=UTF-8');
+    return response.body;
 }
 
 /**
@@ -20,5 +23,9 @@ exports.convert = async(url, sql) => {
  * @param {*} arr 
  */
 exports.search = async(url, sql) => {
-    return await superagent.post('http://' + url + '/_sql?format=json').send({ "query": sql }).set('accept', 'json');
+    const httpURL = 'http://' + url + '/_sql?format=json';
+    const raw = { "query": sql };
+    const response = await superagent.post(httpURL).send(raw).set('Content-Type', 'application/json;charset=UTF-8');
+    delete response.body.columns; 
+    return response.body;
 }

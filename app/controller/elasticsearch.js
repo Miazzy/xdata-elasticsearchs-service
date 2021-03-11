@@ -75,6 +75,7 @@ class ElasticSearchController extends Controller {
         const offset = page * size;
         const next = (parseInt(page) + 1) * size;
         const url = app.config.elasticsearchsync.es.host;
+        const limits = ` limit ${next}`;
 
         let wheresql = '';
         let orderby = '';
@@ -82,10 +83,9 @@ class ElasticSearchController extends Controller {
         //将查询条件，Page，Size，排序条件等转化为SQL
         wheresql = whereHelp.getWhereSQL(where, ' where ');
         orderby = order ? (order.startsWith('-') ? ` order by ${order.slice(1)} desc ` : ` order by ${order} asc `) : '';
-        limits = ` limit ${next}`;
 
         //根据查收条件拼接查询SQL
-        const sql = `select ${fields} from ${schema}_${type} ${wheresql} ${orderby} `;
+        const sql = `select ${fields} from ${schema}_${type} ${wheresql} ${orderby} ${limits} `;
         console.log(`sql: `, sql);
 
         //执行DSL查询，返回查询结果
@@ -123,14 +123,14 @@ class ElasticSearchController extends Controller {
         //将查询条件，Page，Size，排序条件等转化为SQL
         wheresql = whereHelp.getWhereSQL(where, ' where ');
         orderby = order ? (order.startsWith('-') ? ` order by ${order.slice(1)} desc ` : ` order by ${order} asc `) : '';
-        limits = ` limit ${next}`;
+        const limits = ` limit ${next}`;
 
         //根据查收条件拼接查询SQL
         const sql = `select ${fields} from ${schema}_${type} ${wheresql} ${orderby} ${limits} `;
         console.log(`sql: `, sql);
 
         //将SQL转化为ElasticSearch DSL
-        let params = await estools.convert(sql); //elasticsearch-plugin install https://hub.fastgit.org/NLPchina/elasticsearch-sql/releases/download/7.8.0.0/elasticsearch-sql-7.8.0.0.zip elasticsearch-plugin install https://hub.fastgit.org/NLPchina/elasticsearch-sql/releases/download/7.8.1.0/elasticsearch-sql-7.8.1.0.zip
+        let params = await estools.convert(url,sql); //elasticsearch-plugin install https://hub.fastgit.org/NLPchina/elasticsearch-sql/releases/download/7.8.0.0/elasticsearch-sql-7.8.0.0.zip elasticsearch-plugin install https://hub.fastgit.org/NLPchina/elasticsearch-sql/releases/download/7.8.1.0/elasticsearch-sql-7.8.1.0.zip
         params.from = offset;
         params.size = next;
         console.log(`convert:`, convert, ' params:', JSON.stringify(params));

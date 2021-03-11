@@ -217,11 +217,7 @@ exports.getWhereSQL = function(whereInQueryParams, condType = ' where ') {
         logicalOperatorsInClause &&
         numOfConditions.length !== logicalOperatorsInClause.length + 1
     ) {
-        console.log(
-            'conditions and logical operators mismatch',
-            numOfConditions.length,
-            logicalOperatorsInClause.length
-        );
+        // console.log('conditions and logical operators mismatch', numOfConditions.length, logicalOperatorsInClause.length );
     } else {
         // console.log('numOfConditions',numOfConditions,whereInQueryParams);
         // console.log('logicalOperatorsInClause',logicalOperatorsInClause);
@@ -269,7 +265,7 @@ exports.getWhereSQL = function(whereInQueryParams, condType = ' where ') {
                 break;
             }
 
-            console.log(`temp:`, temp);
+            //console.log(`temp:`, temp);
             whereQuery += temp;
 
             /** ************** END : variable ****************/
@@ -281,7 +277,7 @@ exports.getWhereSQL = function(whereInQueryParams, condType = ' where ') {
                 break;
             }
 
-            console.log(`comparisonOperator:`, comparisonOperator);
+            //console.log(`comparisonOperator:`, comparisonOperator);
 
             whereQuery += comparisonOperator;
 
@@ -324,7 +320,7 @@ exports.getWhereSQL = function(whereInQueryParams, condType = ' where ') {
                 break;
             }
 
-            console.log(`temp:`, temp);
+            //console.log(`temp:`, temp);
 
             whereQuery += temp;
 
@@ -339,7 +335,7 @@ exports.getWhereSQL = function(whereInQueryParams, condType = ' where ') {
 
                 whereQuery += getLogicalOperator(logicalOperatorsInClause[i]);
             }
-            console.log(`whereQuery:`, whereQuery);
+            //console.log(`whereQuery:`, whereQuery);
             /** ************** END : operator ****************/
         }
     }
@@ -352,13 +348,13 @@ exports.getWhereSQL = function(whereInQueryParams, condType = ' where ') {
 
     if (!grammarErr) {
         obj.query = condType + ' ' + whereQuery.replace(/\?\?/g, ' ? ').replace(/\=/g, ' = ');
-        console.log(`query:`, obj.query);
+        //console.log(`query:`, obj.query);
         obj.params = whereParams;
 
-        console.log(`params:`, JSON.stringify(obj.params));
+        //console.log(`params:`, JSON.stringify(obj.params));
 
         obj.params.map((value, index) => {
-            console.log(`index:`, index, " value:", value);
+            //console.log(`index:`, index, " value:", value);
             if (value === '#empty#') {
                 obj.query = obj.query.replace('?', ' ');
             } else if (value === '#null#' || value === '#NULL#') {
@@ -368,7 +364,7 @@ exports.getWhereSQL = function(whereInQueryParams, condType = ' where ') {
             }
         });
 
-        console.log(`query:`, obj.query);
+        //console.log(`query:`, obj.query);
     }
 
     return obj.query;
