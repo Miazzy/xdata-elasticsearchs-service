@@ -20,19 +20,12 @@ class SyncTask extends Subscription {
     }
 
     // subscribe 是真正定时任务执行时被运行的函数
-    async subscribe(response) {
-        response = await this.doTask('job1');
-        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1500);
-        console.log('subscribe: ', dayjs().format('YYYY-MM-DD HH:mm:ss'), JSON.stringify(response));
-        response = await this.doTask('job2');
-        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1500);
-        console.log('subscribe: ', dayjs().format('YYYY-MM-DD HH:mm:ss'), JSON.stringify(response));
-        response = await this.doTask('job3');
-        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1500);
-        console.log('subscribe: ', dayjs().format('YYYY-MM-DD HH:mm:ss'), JSON.stringify(response));
-        response = await this.doTask('job4');
-        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1500);
-        console.log('subscribe: ', dayjs().format('YYYY-MM-DD HH:mm:ss'), JSON.stringify(response));
+    async subscribe(response, tasklist = [1, 2, 3, 4]) {
+        for (const i of tasklist) {
+            response = await this.doTask('job' + i);
+            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1500);
+            console.log('subscribe: ', dayjs().format('YYYY-MM-DD HH:mm:ss'), JSON.stringify(response));
+        }
     }
 
 }
