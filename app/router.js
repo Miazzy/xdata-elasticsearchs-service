@@ -11,21 +11,21 @@ module.exports = app => {
     const { router, controller } = app;
 
     // elasticsearch 新增
-    router.get('/api/es/elasticsearch/index', controller.elasticsearch.index);
+    router.get('/api/es/index', controller.elasticsearch.index);
 
     // elasticsearch 新增
-    router.post('/api/es/elasticsearch/index', controller.elasticsearch.index);
+    router.post('/api/es/index', controller.elasticsearch.index);
 
     // elasticsearch 查询
-    router.get('/api/es/elasticsearch/search', controller.elasticsearch.search);
+    router.get('/api/es/search/:schema/:type', controller.elasticsearch.search);
 
     // elasticsearch 查询
-    router.post('/api/es/elasticsearch/search', controller.elasticsearch.search);
+    router.post('/api/es/search/:schema/:type', controller.elasticsearch.search);
 
     // elasticsearch 删除
-    router.delete('/api/es/elasticsearch/delete', controller.elasticsearch.delete);
+    router.delete('/api/es/delete', controller.elasticsearch.delete);
 
     // elasticsearch 同步
-    router.get('/api/es/elasticsearch/sync', controller.essync.index);
+    router.get('/api/es/sync', controller.essync.index);
 
 };
