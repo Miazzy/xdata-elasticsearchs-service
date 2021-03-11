@@ -268,6 +268,8 @@ exports.getWhereSQL = function(whereInQueryParams, condType = ' where ') {
                 grammarErr = 1;
                 break;
             }
+
+            console.log(`temp:`, temp);
             whereQuery += temp;
 
             /** ************** END : variable ****************/
@@ -278,6 +280,9 @@ exports.getWhereSQL = function(whereInQueryParams, condType = ' where ') {
                 grammarErr = 1;
                 break;
             }
+
+            console.log(`comparisonOperator:`, comparisonOperator);
+
             whereQuery += comparisonOperator;
 
             // get the variableValue and push to params
@@ -318,6 +323,9 @@ exports.getWhereSQL = function(whereInQueryParams, condType = ' where ') {
                 grammarErr = 1;
                 break;
             }
+
+            console.log(`temp:`, temp);
+
             whereQuery += temp;
 
             if (numOfConditions.length !== -1 && i !== numOfConditions.length - 1) {
@@ -331,6 +339,7 @@ exports.getWhereSQL = function(whereInQueryParams, condType = ' where ') {
 
                 whereQuery += getLogicalOperator(logicalOperatorsInClause[i]);
             }
+            console.log(`whereQuery:`, whereQuery);
             /** ************** END : operator ****************/
         }
     }
@@ -343,17 +352,23 @@ exports.getWhereSQL = function(whereInQueryParams, condType = ' where ') {
 
     if (!grammarErr) {
         obj.query = condType + ' ' + whereQuery.replace(/\?\?/g, ' ? ').replace(/\=/g, ' = ');
+        console.log(`query:`, obj.query);
         obj.params = whereParams;
 
+        console.log(`params:`, JSON.stringify(obj.params));
+
         obj.params.map((value, index) => {
+            console.log(`index:`, index, " value:", value);
             if (value === '#empty#') {
                 obj.query = obj.query.replace('?', ' ');
             } else if (value === '#null#' || value === '#NULL#') {
                 obj.query = obj.query.replace('?', ' NULL ');
             } else {
-                obj.query = obj.query.replace('?', value);
+                obj.query = index % 2 == 1 ? obj.query.replace('?', ` '${value}' `) : obj.query.replace('?', value);
             }
         });
+
+        console.log(`query:`, obj.query);
     }
 
     return obj.query;

@@ -24,7 +24,7 @@ class SyncTask extends Subscription {
         for (const i of tasklist) {
             response = await this.doTask('job' + i);
             Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1500);
-            console.log('subscribe: ', dayjs().format('YYYY-MM-DD HH:mm:ss'), JSON.stringify(response));
+            //console.log('subscribe: ', dayjs().format('YYYY-MM-DD HH:mm:ss'), JSON.stringify(response));
         }
     }
 
