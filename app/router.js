@@ -3,24 +3,12 @@
 /* eslint-disable eol-last */
 'use strict';
 
-
-/**
- * @function init 执行初始化
- * @description Set up btoa/atob function with NodeJS
- */
-const init = () => {
-
-};
-
 /**
  * @param {Egg.Application} app - egg application
  */
 module.exports = app => {
 
     const { router, controller } = app;
-
-    // 执行初始化
-    init();
 
     // elasticsearch 新增
     router.get('/api/es/elasticsearch/index', controller.elasticsearch.index);

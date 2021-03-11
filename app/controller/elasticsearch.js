@@ -3,6 +3,8 @@
 'use strict';
 
 const Controller = require('egg').Controller;
+const convert = require('elasql').conver;
+const whereHelp = require('../utils/where.helper');
 
 /**
  * @description
@@ -60,32 +62,43 @@ class ElasticSearchController extends Controller {
         const { ctx, app } = this;
 
         // 获取Database名称或Index名称
-        const schema = ctx.query.schema || ctx.params.schema || 'workspace';
+        const schema = ctx.query.schema || ctx.params.schema || 'schema';
         // 获取表名称或Type名称
-        const type = ctx.query.type || ctx.params.type || 'type';
-        // 获取查询条件
-        const content = ctx.query.data || ctx.params.data || ctx.query.content || ctx.params.content || '{}';
-
+        const type = ctx.query.type || ctx.params.type || ctx.query.table || ctx.params.table || 'type';
         //获取通用查询条件，Page，Size，排序条件等
+        const where = ctx.query.where || ctx.params.where || ctx.query._where || '';
+        const order = ctx.query.order || ctx.query._order || ctx.query.orderby || ctx.query._orderby || ctx.params.order || '';
+        const fields = ctx.query.fields || ctx.query._fields || '*';
+        const page = ctx.query.page || ctx.query._page || ctx.query._p || 0;
+        const size = ctx.query.size || ctx.query._size || ctx.query._s || 100;
+        const offset = page * size + 1;
+        const next = (parseInt(page) + 1) * size;
+
+        let wheresql = '';
+        let orderby = '';
+        let limits = '';
 
         //将查询条件，Page，Size，排序条件等转化为SQL
+        wheresql = whereHelp.getWhereSQL(where, ' where ');
+        orderby = order.startsWith('-') ? ` order by ${order.slice(1)} desc ` : ` order by ${order} asc `;
+        limits = ` limit ${offset} , ${next} `;
+
+        //根据查收条件拼接查询SQL
+        const sql = `select ${fields} from ${schema}.${type} ${wheresql} ${orderby} ${limits} `;
+        console.log(`sql: `, sql);
 
         //将SQL转化为ElasticSearch DSL
+        const params = convert(sql);
 
-        //执行DSL查询
-
-        //返回查询结果
-
+        //执行DSL查询，返回查询结果
         try {
             ctx.body = await app.elasticsearch.search({
-                index: schema,
-                type,
-                body: {
-
-                },
+                index: `${schema}_${type}`,
+                type: type,
+                body: params,
             });
         } catch (error) {
-            console.log(error);
+            ctx.body = { err: -90, code: -1090, success: false, pindex: -1, message: error }
         }
     }
 
