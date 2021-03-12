@@ -258,6 +258,42 @@ module.exports = appInfo => {
         }
     }
 
+    config.clickhousesync = {
+        status: true,
+        register: true,
+        logger: console,
+        serverList: ['172.18.1.50:8848', '172.18.1.50:8849', '172.18.1.50:8850'], // replace to real nacos serverList
+        namespace: 'public',
+        serviceName: 'xdata-clickhouse-service',
+        //上游MySQL服务
+        mysql: {
+            host: '172.18.254.96',
+            port: '4000',
+            user: 'zhaoziyun',
+            password: 'ziyequma',
+            database: 'xdata',
+        },
+        //下游ClickHouse服务
+        clickhouse: {
+            host: '172.18.254.96',
+            port: '4000',
+            user: 'zhaoziyun',
+            password: 'ziyequma',
+            database: 'xdata',
+        },
+        //全量同步语句
+        synclang: `DROP TABLE :table ; CREATE TABLE :table ENGINE = MergeTree ORDER BY id AS SELECT * FROM mysql('${config.clickhousesync.mysql.host}:${config.clickhousesync.mysql.port}', '${config.clickhousesync.mysql.database}', ':table', '${config.clickhousesync.mysql.user}','${config.clickhousesync.mysql.password}') ;`,
+        //增量同步语句
+        inclang: `INSERT INTO :table :dest_fields select :src_fields from mysql('${config.clickhousesync.mysql.host}:${config.clickhousesync.mysql.port}', '${config.clickhousesync.mysql.database}', ':table',  '${config.clickhousesync.mysql.user}', '${config.clickhousesync.mysql.password}') where :param_id >= :pindex ; `,
+        //同步表
+        synctables: [
+            ['bs_company_flow_base', false, 'id', 0, 'bs_sync_rec'],
+            ['bs_admin_address', false, 'id', 0, 'bs_sync_rec'],
+            ['bs_admin_group', false, 'id', 0, 'bs_sync_rec'],
+            ['bs_seal_regist', false, 'id', 0, 'bs_sync_rec']
+        ],
+    }
+
     config.eggEtcd = {
         hosts: [
             '172.18.1.50:32777',
