@@ -45,7 +45,6 @@ declare module 'egg' {
     redis?: EggPluginItem;
     nacos?: EggPluginItem;
     ratelimiter?: EggPluginItem;
-    elasticsearch?: EggPluginItem;
     eggEtcd?: EggPluginItem;
   }
 }

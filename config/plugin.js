@@ -60,11 +60,6 @@ module.exports = {
         package: 'egg-rate-limiters',
     },
 
-    elasticsearch: {
-        enable: false,
-        package: 'egg-es',
-    },
-
     eggEtcd: {
         enable: false,
         package: 'egg-etcd',

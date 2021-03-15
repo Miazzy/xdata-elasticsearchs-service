@@ -197,17 +197,14 @@ module.exports = appInfo => {
     };
 
     config.elasticsearch = {
-        host: 'elasticsearch.yunwisdom.club:30080',
-        apiVersion: '7.x'
-    };
-
-    config.elasticsearch = {
         status: true,
         register: true,
         logger: console,
         serverList: ['172.18.1.50:8848', '172.18.1.50:8849', '172.18.1.50:8850'], // replace to real nacos serverList
         namespace: 'public',
         serviceName: 'xdata-elasticsearch-service',
+        host: 'elasticsearch.yunwisdom.club:30080',
+        apiVersion: '7.x',
         es: {
             host: 'elasticsearch.yunwisdom.club:30080',
             port: 30080,
