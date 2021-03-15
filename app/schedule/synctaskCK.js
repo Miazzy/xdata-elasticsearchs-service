@@ -14,9 +14,9 @@ class SyncTaskCK extends Subscription {
     }
 
     // 执行任务
-    async doTask(taskName = 'job1') {
+    async doTask(taskName = 'all') {
         const { ctx, app } = this;
-        return await ctx.service.syncservice.doTask(taskName);
+        return await ctx.service.syncservice.doCkTask(taskName);
     }
 
     // subscribe 是真正定时任务执行时被运行的函数
