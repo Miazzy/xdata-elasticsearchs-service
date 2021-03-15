@@ -48,7 +48,6 @@ class SyncService extends Service {
                     });
                 }
                 const updateSQL = `UPDATE ${config.database}.bs_essync_rec t SET t.pindex = :pindex WHERE t.index = :index and t.type = :type and t.params = :params `;
-                //打印日志
                 //console.log(`updateSQL:`, updateSQL);
                 //讲pindex写入数据库
                 app.esMySQL.query(updateSQL, { pindex: config.pindex, index: config.index, type: config.type, params: config.params });
