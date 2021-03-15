@@ -6,7 +6,7 @@ const Controller = require('egg').Controller;
 
 /**
  * @description 
- * ElasticSearch同步服务控制器
+ * ClickHouse同步服务控制器
  */
 class CkSyncController extends Controller {
 
