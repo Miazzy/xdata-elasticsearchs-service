@@ -143,6 +143,9 @@ class SyncService extends Service {
                  *  -- 定时 每天0:00，执行第一步，然后循环第二步至第四步;注意定时执行第一步可以根据具体情况取消。
                  */
 
+                //TODO 最大ID值，最大XID值，并且将ID和XID减去10分钟的数值，减去10分钟是防止漏了，可能存在用户在手机上线获取了一个ID，然后提交的时候网络卡了，等了3分钟，网络好了，如果那个提交页面没有关闭并且用户数据提交上去了，这时这个id可能出现插入到前面数据的可能性
+                //TODO xdata-xmysql-service的服务，获取xid，patch操作，需要更新到数据库中
+
             } catch (error) {
                 console.log(error);
             }
