@@ -43,12 +43,7 @@ class ClickHouseController extends Controller {
 
         // 将数据存入elasticsearch服务器中，如果不存在则新增，如果存在则修改
         try {
-            ctx.body = await app.elasticsearch.index({
-                index: schema,
-                type,
-                id,
-                body: content,
-            });
+
         } catch (error) {
             console.log(error);
         }
@@ -90,7 +85,7 @@ class ClickHouseController extends Controller {
 
         //执行DSL查询，返回查询结果
         try {
-            ctx.body = await estools.search(url, sql)
+
         } catch (error) {
             ctx.body = { err: -90, code: -1090, success: false, pindex: -1, message: error }
         }
@@ -138,11 +133,7 @@ class ClickHouseController extends Controller {
 
         //执行DSL查询，返回查询结果
         try {
-            ctx.body = await app.elasticsearch.search({
-                index: `${schema}_${type}`,
-                type,
-                body: params
-            });
+
         } catch (error) {
             ctx.body = { err: -90, code: -1090, success: false, pindex: -1, message: error }
         }
@@ -163,11 +154,7 @@ class ClickHouseController extends Controller {
         const id = ctx.query.id || ctx.params.id || 0;
 
         try {
-            ctx.body = await app.elasticsearch.delete({
-                index: schema,
-                type,
-                id,
-            });
+
         } catch (error) {
             ctx.body = { err: 'not find', code: 0 };
             console.log(error);
