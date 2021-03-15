@@ -132,12 +132,22 @@ class SyncService extends Service {
                     console.log(`patch response:`, JSON.stringify(tconfig.patchResponse), '\n\r insert sql:', patchSQL);
                 }
 
+                /**
+                 *  -- 第一步，如果没有表，则DROP表并新建表并导入数据
+                 *  -- DROP TABLE IF EXISTS  xdata.bs_seal_regist; CREATE TABLE xdata.bs_seal_regist ENGINE = MergeTree ORDER BY id AS SELECT * FROM mysql('172.18.254.95:39090', 'xdata', 'bs_seal_regist', 'zhaoziyun','ziyequma') ;
+                 *  -- 第二步，查询clickhouse表中，最大ID值，最大XID值，并且将ID和XID减去10分钟的数值，减去10分钟是防止漏了，可能存在用户在手机上线获取了一个ID，然后提交的时候网络卡了，等了3分钟，网络好了，如果那个提交页面没有关闭并且用户数据提交上去了，这时这个id可能出现插入到前面数据的可能性
+                 *  -- select max(id) id, max(xid) xid  from xdata.bs_seal_regist;
+                 *  -- 第三步，查询id大于当前clickhouse表中最大值ID的所有数据，，并Insert表单中
+                 *  -- 第四步，查询xid大于当前clickhouse表中最大值xid得所有数据，删除clickhouse表中这些数据中存在这些ID值得记录,并Insert这些数据到clickhouse表单中
+                 *  -- ALTER TABLE xdata.bs_seal_regist DELETE WHERE id in ('','','');
+                 *  -- 循环 循环进行第二步至第四步的操作
+                 *  -- 定时 每天0:00，执行第一步，然后循环第二步至第四步;注意定时执行第一步可以根据具体情况取消。
+                 */
 
             } catch (error) {
                 console.log(error);
             }
         }
-
 
     }
 
