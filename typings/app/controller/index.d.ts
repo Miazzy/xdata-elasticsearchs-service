@@ -2,12 +2,14 @@
 // Do not modify this file!!!!!!!!!
 
 import 'egg';
+import ExportCksync = require('../../../app/controller/cksync');
 import ExportClickhouse = require('../../../app/controller/clickhouse');
 import ExportElasticsearch = require('../../../app/controller/elasticsearch');
 import ExportEssync = require('../../../app/controller/essync');
 
 declare module 'egg' {
   interface IController {
+    cksync: ExportCksync;
     clickhouse: ExportClickhouse;
     elasticsearch: ExportElasticsearch;
     essync: ExportEssync;
