@@ -2,7 +2,7 @@ const Subscription = require('egg').Subscription;
 const dayjs = require('dayjs');
 // const syncservice = require('../service/syncservice');
 
-class SyncTask extends Subscription {
+class SyncTaskCK extends Subscription {
 
     // 通过 schedule 属性来设置定时任务的执行间隔等配置
     static get schedule() {
@@ -30,4 +30,4 @@ class SyncTask extends Subscription {
 
 }
 
-module.exports = SyncTask;
+module.exports = SyncTaskCK;
