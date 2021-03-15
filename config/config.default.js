@@ -201,7 +201,7 @@ module.exports = appInfo => {
         apiVersion: '7.x'
     };
 
-    config.elasticsearchsync = {
+    config.elasticsearch = {
         status: true,
         register: true,
         logger: console,
@@ -214,8 +214,8 @@ module.exports = appInfo => {
             apiVersion: '7.x',
         },
         mysql: {
-            host: '172.18.254.96',
-            port: '4000',
+            host: '172.18.254.95',
+            port: '39090',
             user: 'zhaoziyun',
             password: 'ziyequma',
             database: 'xdata',
@@ -258,7 +258,7 @@ module.exports = appInfo => {
         }
     }
 
-    config.clickhousesync = {
+    config.clickhouse = {
         status: true,
         register: true,
         logger: console,
@@ -267,24 +267,46 @@ module.exports = appInfo => {
         serviceName: 'xdata-clickhouse-service',
         //上游MySQL服务
         mysql: {
-            host: '172.18.254.96',
-            port: '4000',
+            host: '172.18.254.95',
+            port: '39090',
             user: 'zhaoziyun',
             password: 'ziyequma',
             database: 'xdata',
         },
         //下游ClickHouse服务
         clickhouse: {
-            host: '172.18.254.96',
-            port: '4000',
-            user: 'zhaoziyun',
-            password: 'ziyequma',
-            database: 'xdata',
+            url: 'http://172.18.254.95',
+            port: '8123',
+            debug: false,
+            basicAuth: {
+                username: 'admin',
+                password: '123',
+            },
+            isUseGzip: false,
+            format: "json", // "json" || "csv" || "tsv"
+            config: {
+                session_id: '',
+                session_timeout: 600,
+                output_format_json_quote_64bit_integers: 0,
+                enable_http_compression: 0,
+                database: 'xdata',
+            },
         },
+    }
+
+    config.clickhousesync = {
         //全量同步语句
-        synclang: `DROP TABLE :table ; CREATE TABLE :table ENGINE = MergeTree ORDER BY id AS SELECT * FROM mysql('${config.clickhousesync.mysql.host}:${config.clickhousesync.mysql.port}', '${config.clickhousesync.mysql.database}', ':table', '${config.clickhousesync.mysql.user}','${config.clickhousesync.mysql.password}') ;`,
+        synclang: `DROP TABLE IF EXISTS ${config.clickhouse.mysql.database}.:table ; CREATE TABLE ${config.clickhouse.mysql.database}.:table ENGINE = MergeTree ORDER BY id AS SELECT * FROM mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table', '${config.clickhouse.mysql.user}','${config.clickhouse.mysql.password}') ;`,
+        //查询增量ID/XID
+        sctlang: `SELECT max(id) id, max(xid) xid FROM ${config.clickhouse.mysql.database}.:table ;`,
+        //查询大于XID的所有数据集(大于本地最大XID，表示上游有更新，需要将上游更新)
+        sidlang: `SELECT :src_fields FROM mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table',  '${config.clickhouse.mysql.user}', '${config.clickhouse.mysql.password}') WHERE :param_id >= ':pindex' ; `,
+        //根据查询到的ID，删除数据
+        dltlang: `ALTER TABLE ${config.clickhouse.mysql.database}.:table DELETE WHERE id in (':ids') ; `,
+        //更新数据
+        updlang: `ALTER TABLE ${config.clickhouse.mysql.database}.:table UPDATE :update WHERE id = ':id' ; `,
         //增量同步语句
-        inclang: `INSERT INTO :table :dest_fields select :src_fields from mysql('${config.clickhousesync.mysql.host}:${config.clickhousesync.mysql.port}', '${config.clickhousesync.mysql.database}', ':table',  '${config.clickhousesync.mysql.user}', '${config.clickhousesync.mysql.password}') where :param_id >= :pindex ; `,
+        inclang: `INSERT INTO ${config.clickhouse.mysql.database}.:table :dest_fields select :src_fields from mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table',  '${config.clickhouse.mysql.user}', '${config.clickhouse.mysql.password}') WHERE :param_id >= ':pindex' ; `,
         //同步表
         synctables: [
             ['bs_company_flow_base', false, 'id', 0, 'bs_sync_rec'],

@@ -3,10 +3,10 @@ const assert = require('assert');
 const os = require('os');
 const FlowRuleManager = require('xdata-sentinel/lib/core/flow/rule_manager');
 const Sentinel = require('xdata-sentinel/lib');
-const ElasticSearchClient = require('elasticsearchclient');
 const rds = require('ali-rds');
 const elasticsearch = require('elasticsearch');
 const base64Config = require('./config/base64.config');
+const { ClickHouse } = require('clickhouse');
 
 base64Config.init();
 
@@ -14,7 +14,7 @@ const logger = console;
 logger.write = console.log;
 
 const sentinelClient = new Sentinel({
-    appName: 'sentinel-test',
+    appName: 'sentinel-search',
     async: true,
     logger: console,
     blockLogger: console,
@@ -62,9 +62,9 @@ function getIpAddress() {
 }
 
 //链接ES服务上游数据库MySQL
-function createESMySQLClient(config, app) {
+function createMySQLClient(config, app) {
 
-    config = app.config.elasticsearchsync.mysql;
+    config = app.config.elasticsearch.mysql;
 
     assert(config.host && config.port && config.user && config.database,
         `[elasticsearch-mysql] 'host: ${config.host}', 'port: ${config.port}', 'user: ${config.user}', 'database: ${config.database}' are required on config`);
@@ -99,38 +99,50 @@ module.exports = app => {
                 console.log(Constants.ROOT.toString());
             }
         }
-        // 启用 elasticsearch 服务
-        if (app.config.elasticsearchsync.status) {
-            console.log('egg service start & register elasticsearch sync rules ... ');
+        // 启用 elasticsearch 查询、同步等 服务
+        if (app.config.elasticsearch.status) {
 
+            console.log('egg service start & register elasticsearch sync rules ... ');
             // NACOS中注册 elasticsearch 服务
-            if (app.config.elasticsearchsync.register) {
-                const client = new nacos.NacosNamingClient(app.config.elasticsearchsync);
+            if (app.config.elasticsearch.register) {
+                const client = new nacos.NacosNamingClient(app.config.elasticsearch);
                 await client.ready();
-                await client.registerInstance(app.config.elasticsearchsync.serviceName, {
+                await client.registerInstance(app.config.elasticsearch.serviceName, {
                     ip: getIpAddress(),
                     port: app.options.port || 8001,
                 });
             }
 
-            var serverOptions = {
-                host: app.config.elasticsearchsync.es.host,
-                port: app.config.elasticsearchsync.es.port,
-                pathPrefix: 'optional pathPrefix',
-                secure: false,
-                auth: { //Optional basic HTTP Auth
-                    username: '',
-                    password: '',
-                }
-            };
+            console.log(`config:`, app.config.elasticsearch.es);
 
-            console.log(`config:`, app.config.elasticsearchsync.es);
+            debugger
 
             //注册es同步相关模块
-            app.esSearch = new elasticsearch.Client(app.config.elasticsearchsync.es);
-            app.esMySQL = createESMySQLClient(app.config.elasticsearchsync.mysql, app);
+            app.esSearch = new elasticsearch.Client(app.config.elasticsearch.es);
+            app.esMySQL = createMySQLClient(app.config.elasticsearch.mysql, app);
 
         }
+
+        // 启用 clickhouse 查询、同步等 服务
+        if (app.config.clickhouse.status) {
+
+            console.log('egg service start & register clickhouse sync rules ... ');
+            // NACOS中注册 clickhouse 服务
+            if (app.config.clickhouse.register) {
+                const client = new nacos.NacosNamingClient(app.config.clickhouse);
+                await client.ready();
+                await client.registerInstance(app.config.clickhouse.serviceName, {
+                    ip: getIpAddress(),
+                    port: app.options.port || 8001,
+                });
+            }
+
+            app.ck = {};
+            app.ck.clickhouse = new ClickHouse(app.config.clickhouse.clickhouse);
+            app.ck.mysql = createMySQLClient(app.config.clickhouse.mysql, app);
+
+        }
+
     });
 
     // 准备好执行

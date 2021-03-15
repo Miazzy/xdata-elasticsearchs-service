@@ -2,13 +2,18 @@ const Service = require('egg').Service;
 
 class SyncService extends Service {
 
+    /**
+     * @description 同步ES数据
+     * @param {*} taskName 
+     * @returns 
+     */
     async doTask(taskName = 'job1') {
 
         const { ctx, app } = this;
 
         try {
-            const config = app.config.elasticsearchsync[taskName];
-            //console.log(`elasticsearchsync config:`, JSON.stringify(config));
+            const config = app.config.elasticsearch[taskName];
+            //console.log(`elasticsearch config:`, JSON.stringify(config));
             const sql = config.sql.replace(/\${index}/g, config.database).replace(/\${type}/g, config.type).replace(/\${params}/g, config.params);
 
             //查询数据库中的pindex
@@ -30,9 +35,9 @@ class SyncService extends Service {
             if (response && response.length > 0) {
                 //console.log(`response:`, JSON.stringify(response[response.length - 1][config.params]));
                 //记录最后处理的pindex，下次同步查询从此pindex开始
-                app.config.elasticsearchsync[taskName].pindex = response[response.length - 1][config.params];
+                app.config.elasticsearch[taskName].pindex = response[response.length - 1][config.params];
 
-                //console.log(`last pindex:`, app.config.elasticsearchsync[taskName].pindex);
+                //console.log(`last pindex:`, app.config.elasticsearch[taskName].pindex);
                 for (const element of response) {
                     //console.log(`id:`, element.id, ` type:`, config.type, ` index:`, `${config.index}_${config.type}`, ' content: ', JSON.stringify(element));
                     app.esSearch.index({
@@ -52,6 +57,17 @@ class SyncService extends Service {
         } catch (error) {
             return { err: -99, code: -99, success: false, pindex: -1, message: error };
         }
+    }
+
+    /**
+     * @description 同步ClickHouse数据
+     * @param {*} taskName 
+     * @returns 
+     */
+    async doCkTask(taskName = '') {
+
+        const { ctx, app } = this;
+
     }
 
 }

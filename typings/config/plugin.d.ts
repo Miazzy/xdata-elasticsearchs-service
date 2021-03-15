@@ -19,7 +19,6 @@ import 'egg-cache';
 import 'egg-mysql';
 import 'egg-redis';
 import 'egg-rate-limiters';
-import 'egg-es';
 import { EggPluginItem } from 'egg';
 declare module 'egg' {
   interface EggPlugin {

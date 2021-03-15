@@ -9,9 +9,9 @@ const whereHelp = require('../utils/where.helper');
 
 /**
  * @description
- * ElasticSearch增删改查服务控制器
+ * ClickHouse增删改查服务控制器
  */
-class ElasticSearchController extends Controller {
+class ClickHouseController extends Controller {
 
     /**
      * @function 数据库添加数据
@@ -176,4 +176,4 @@ class ElasticSearchController extends Controller {
 }
 
 
-module.exports = ElasticSearchController;
+module.exports = ClickHouseController;
