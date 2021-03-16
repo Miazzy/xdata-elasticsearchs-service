@@ -300,12 +300,14 @@ module.exports = appInfo => {
         sctlang: `SELECT max(id) id, max(xid) xid FROM ${config.clickhouse.mysql.database}.:table ; `,
         //查询大于XID的所有数据集(大于本地最大XID，表示上游有更新，需要将上游更新)
         sidlang: `SELECT :src_fields FROM mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table',  '${config.clickhouse.mysql.user}', '${config.clickhouse.mysql.password}') WHERE :param_id >= ':pindex' ; `,
+        //查询上游存在但是下游不存在的数据，并导入下游中
+        istlang: `INSERT INTO ${config.clickhouse.mysql.database}.:table SELECT * FROM mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table',  '${config.clickhouse.mysql.user}', '${config.clickhouse.mysql.password}') A WHERE A.:param_id not in (select :param_id from ${config.clickhouse.mysql.database}.:table ); `,
         //根据查询到的ID，删除数据
-        dltlang: `ALTER TABLE ${config.clickhouse.mysql.database}.:table DELETE WHERE xid = '0' and id in ( select id from mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table',  '${config.clickhouse.mysql.user}', '${config.clickhouse.mysql.password}') WHERE :param_id >= ':pindex'  ) ; `,
+        dltlang: `ALTER TABLE ${config.clickhouse.mysql.database}.:table DELETE WHERE xid = '0' and id in ( select id from mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table',  '${config.clickhouse.mysql.user}', '${config.clickhouse.mysql.password}') WHERE :param_id > ':pindex'  ) ; `,
         //更新数据
         updlang: `ALTER TABLE ${config.clickhouse.mysql.database}.:table UPDATE :update WHERE id = ':id' ; `,
         //增量同步语句
-        inclang: `INSERT INTO ${config.clickhouse.mysql.database}.:table :dest_fields select :src_fields from mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table',  '${config.clickhouse.mysql.user}', '${config.clickhouse.mysql.password}') WHERE :param_id >= ':pindex' ; `,
+        inclang: `INSERT INTO ${config.clickhouse.mysql.database}.:table :dest_fields select :src_fields from mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table',  '${config.clickhouse.mysql.user}', '${config.clickhouse.mysql.password}') WHERE :param_id > ':pindex' ; `,
         //同步表
         tasks: [
             { table: 'bs_company_flow_base', index: 'xdata', resetFlag: true, fieldName: 'id', pindex: 0, syncTableName: 'bs_sync_rec' },
