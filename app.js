@@ -138,6 +138,7 @@ module.exports = app => {
             }
 
             app.ck = {};
+            console.log(`clickhouse config:`, app.config.clickhouse.clickhouse);
             app.ck.clickhouse = new ClickHouse(app.config.clickhouse.clickhouse);
             app.ck.mysql = createMySQLClient(app.config.clickhouse.mysql, app);
 
