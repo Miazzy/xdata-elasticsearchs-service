@@ -82,6 +82,7 @@ class SyncService extends Service {
             const tconfig = {};
             const { table, index, resetFlag, fieldName, fieldType, pindex, syncTableName } = task;
             const clickhouse = app.ck.clickhouse;
+            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1000);
             // console.log(`table:${table}, resetFlag:${resetFlag}, fieldName:${fieldName}, pindex:${pindex}, syncTableName:${syncTableName} `);
 
             //只执行taskName的任务
@@ -100,7 +101,7 @@ class SyncService extends Service {
                         console.log(`task config: ${JSON.stringify(tconfig)}`);
                     }
 
-                    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 300);
+                    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1000);
 
                     //如果数据库配置重新加载，则执行重新加载操作 ; 定时每天0:00，执行第一步，然后循环第二步至第四步; 注意定时执行第一步可以根据具体情况取消。
                     if (tconfig.reset == 'true' || dayjs().format('HH:mm:ss') == '00:00:00') {
@@ -119,11 +120,19 @@ class SyncService extends Service {
                         app.ck.mysql.query(updateSQL, { index: index, type: table, params: fieldName });
                     }
 
-                    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 300);
+                    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1000);
 
                     //第二步，查询clickhouse表中，最大ID值，最大XID值，并且将ID和XID减去10分钟的数值 -- select max(id) id, max(xid) xid  from xdata.bs_seal_regist;
-                    tconfig.queryResponse = await clickhouse.query(synconfig.sctlang.replace(':table', table)).toPromise();
-                    console.log(`query response:`, JSON.stringify(tconfig.queryResponse));
+                    const querySQL = synconfig.sctlang.replace(':table', table);
+                    console.log(`query sql: ${querySQL}`);
+                    try {
+                        tconfig.queryResponse = await clickhouse.query(querySQL).toPromise();
+                        console.log(`query sql: ${querySQL} , response:`, JSON.stringify(tconfig.queryResponse));
+                    } catch (error) {
+                        const updateSQL = `UPDATE ${index}.bs_sync_rec t SET reset = 'true' WHERE t.index = :index and t.type = :type and t.params = :params `;
+                        console.log('update sql:', updateSQL, error);
+                        app.ck.mysql.query(updateSQL, { index: index, type: table, params: fieldName });
+                    }
 
                     //查询到返回值，则进行后续步骤
                     if (tconfig.queryResponse && tconfig.queryResponse.length > 0) {
@@ -136,27 +145,27 @@ class SyncService extends Service {
                         console.log(`insert sql:`, insertSQL);
                         tconfig.insertResponse = await clickhouse.query(insertSQL).toPromise();
                         console.log(`insert response:`, JSON.stringify(tconfig.insertResponse), '\n\r insert sql:', insertSQL);
-                        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 300);
+                        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1000);
 
                         //查询mysql表存在，但是click表不存在的数据，insert到clickhouse表中
                         const istlangSQL = synconfig.istlang.replace(/:table/g, table).replace(/:param_id/g, 'id').replace(fieldType == 'number' ? /':pindex'/g : /:pindex/g, id);
                         console.log(`istlang sql:`, istlangSQL);
                         tconfig.istlangResponse = await clickhouse.query(istlangSQL).toPromise();
                         console.log(`istlang response:`, JSON.stringify(tconfig.istlangResponse), '\n\r istlang sql:', istlangSQL);
-                        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 300);
+                        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1000);
 
                         //第四步，查询xid大于当前clickhouse表中最大值xid得所有数据，删除clickhouse表中这些数据中存在这些ID值得记录,并Insert这些数据到clickhouse表单中 -- ALTER TABLE xdata.bs_seal_regist DELETE WHERE id in ('','','');
                         const deleteSQL = synconfig.dltlang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'xid').replace(/:pindex/g, xid);
                         console.log(`delete sql:`, deleteSQL);
                         tconfig.deleteResponse = await clickhouse.query(deleteSQL).toPromise();
                         console.log(`delete response:`, JSON.stringify(tconfig.deleteResponse), '\n\r delete sql:', deleteSQL);
-                        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 300);
+                        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1000);
 
                         const patchSQL = synconfig.inclang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'xid').replace(/:pindex/g, xid);
                         console.log(`patch sql:`, patchSQL);
                         tconfig.patchResponse = await clickhouse.query(patchSQL).toPromise();
                         console.log(`patch response:`, JSON.stringify(tconfig.patchResponse), '\n\r patch sql:', patchSQL);
-                        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 300);
+                        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1000);
 
                     }
 
@@ -174,6 +183,8 @@ class SyncService extends Service {
 
                     //TODO 最大ID值，最大XID值，并且将ID和XID减去10分钟的数值，减去10分钟是防止漏了，可能存在用户在手机上线获取了一个ID，然后提交的时候网络卡了，等了3分钟，网络好了，如果那个提交页面没有关闭并且用户数据提交上去了，这时这个id可能出现插入到前面数据的可能性
                     //TODO xdata-xmysql-service的服务，获取xid，patch操作，需要更新到数据库中
+
+                    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1000);
 
                 } catch (error) {
                     console.log(error);
