@@ -7,7 +7,7 @@ class SyncService extends Service {
      * @param {*} taskName 
      * @returns 
      */
-    async doTask(taskName = 'job1') {
+    async doEsTask(taskName = 'job1') {
 
         const { ctx, app } = this;
 

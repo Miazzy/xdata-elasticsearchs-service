@@ -22,7 +22,7 @@ class EsSyncController extends Controller {
         // 获取任务编码
         const taskName = ctx.query.taskName || ctx.params.taskName || 'job1';
         try {
-            ctx.body = await ctx.service.syncservice.doTask(taskName);
+            ctx.body = await ctx.service.syncservice.doEsTask(taskName);
         } catch (error) {
             ctx.body = { err: -99, code: -99, success: false, pindex: -1, message: error };
         }

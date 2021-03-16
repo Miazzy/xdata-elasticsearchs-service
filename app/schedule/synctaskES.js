@@ -1,6 +1,5 @@
 const Subscription = require('egg').Subscription;
 const dayjs = require('dayjs');
-// const syncservice = require('../service/syncservice');
 
 class SyncTaskES extends Subscription {
 
@@ -13,18 +12,11 @@ class SyncTaskES extends Subscription {
         };
     }
 
-    // 执行任务
-    async doTask(taskName = 'job1') {
-        const { ctx, app } = this;
-        return await ctx.service.syncservice.doTask(taskName);
-    }
-
     // subscribe 是真正定时任务执行时被运行的函数
     async subscribe(response, tasklist = [1, 2, 3, 4]) {
         for (const i of tasklist) {
-            response = await this.doTask('job' + i);
-            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1500);
-            //console.log('subscribe: ', dayjs().format('YYYY-MM-DD HH:mm:ss'), JSON.stringify(response));
+            response = await this.ctx.service.syncservice.doEsTask('job' + i);
+            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
         }
     }
 
