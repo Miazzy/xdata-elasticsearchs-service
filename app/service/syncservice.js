@@ -99,6 +99,10 @@ class SyncService extends Service {
                         tconfig.pindex = responseIndex[0].pindex;
                         tconfig.reset = responseIndex[0].reset;
                         // console.log(`task config: ${JSON.stringify(tconfig)}`);
+                    } else {
+                        const insertSQL = `INSERT INTO ${index}.bs_sync_rec (\`database\`, \`index\`, type, params, pindex, ntable, last_pindex, dest_db_type, reset) VALUES (:database, :index, :type, :params, :pindex, :ntable, :last_pindex, :dest_db_type, :reset); `;
+                        console.log('insert bs_sync_rec sql:', insertSQL);
+                        await app.ck.mysql.query(insertSQL, { pindex: 0, index: index, type: table, params: fieldName, database: index, ntable: 0, last_pindex: 0, dest_db_type: 'CK', reset: 'true' });
                     }
 
                     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
