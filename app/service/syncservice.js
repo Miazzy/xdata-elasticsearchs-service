@@ -87,6 +87,7 @@ class SyncService extends Service {
                 //查询数据库中的pindex
                 const queryIndexSQL = `SELECT pindex,reset FROM ${index}.bs_essync_rec t WHERE t.dest_db_type = 'CK' and t.database = :database and t.index = :index and t.type = :type and t.params = :params `;
                 const responseIndex = await app.ck.mysql.query(queryIndexSQL, { index: index, type: table, params: fieldName, database: index });
+                console.log(`response:`, JSON.stringify(responseIndex));
                 if (responseIndex && responseIndex.length > 0) {
                     tconfig.pindex = responseIndex[0].pindex;
                     tconfig.reset = responseIndex[0].reset;
@@ -95,11 +96,13 @@ class SyncService extends Service {
 
                 //如果数据库配置重新加载，则执行重新加载操作 ; 定时每天0:00，执行第一步，然后循环第二步至第四步; 注意定时执行第一步可以根据具体情况取消。
                 if (tconfig.reset == 'true' || dayjs().format('HH:mm:ss') == '00:00:00') {
-                    const dropSQL = synconfig.droplang.replace(':table', table);
+                    const dropSQL = synconfig.droplang.replace(/:table/g, table);
+                    console.log(`drop sql:`, dropSQL);
                     tconfig.dropResponse = await clickhouse.query(dropSQL).toPromise();
                     console.log(`drop response:`, JSON.stringify(tconfig.dropResponse), 'drop sql:', dropSQL);
 
-                    const syncSQL = synconfig.synclang.replace(':table', table);
+                    const syncSQL = synconfig.synclang.replace(/:table/g, table);
+                    console.log(`sync sql:`, syncSQL);
                     tconfig.syncResponse = await clickhouse.query(syncSQL).toPromise();
                     console.log(`sync response:`, JSON.stringify(tconfig.syncResponse), 'sync sql:', syncSQL);
 
@@ -118,18 +121,22 @@ class SyncService extends Service {
 
                     //第三步，查询id大于当前clickhouse表中最大值ID的所有数据，并Insert表单中
                     const insertSQL = synconfig.inclang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'id').replace(/:pindex/g, id);
+                    console.log(`insert sql:`, insertSQL);
                     tconfig.insertResponse = await clickhouse.query(insertSQL).toPromise();
                     console.log(`insert response:`, JSON.stringify(tconfig.insertResponse), '\n\r insert sql:', insertSQL);
 
                     //第四步，查询xid大于当前clickhouse表中最大值xid得所有数据，删除clickhouse表中这些数据中存在这些ID值得记录,并Insert这些数据到clickhouse表单中 -- ALTER TABLE xdata.bs_seal_regist DELETE WHERE id in ('','','');
                     const deleteSQL = synconfig.dltlang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'xid').replace(/:pindex/g, xid);
+                    console.log(`delete sql:`, deleteSQL);
                     tconfig.deleteResponse = await clickhouse.query(deleteSQL).toPromise();
-                    console.log(`delete response:`, JSON.stringify(tconfig.deleteResponse), '\n\r insert sql:', deleteSQL);
+                    console.log(`delete response:`, JSON.stringify(tconfig.deleteResponse), '\n\r delete sql:', deleteSQL);
 
                     const patchSQL = synconfig.inclang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'xid').replace(/:pindex/g, xid);
+                    console.log(`patch sql:`, patchSQL);
                     tconfig.patchResponse = await clickhouse.query(patchSQL).toPromise();
-                    console.log(`patch response:`, JSON.stringify(tconfig.patchResponse), '\n\r insert sql:', patchSQL);
+                    console.log(`patch response:`, JSON.stringify(tconfig.patchResponse), '\n\r patch sql:', patchSQL);
                 }
+
 
                 /**
                  *  -- 第一步，如果没有表，则DROP表并新建表并导入数据
