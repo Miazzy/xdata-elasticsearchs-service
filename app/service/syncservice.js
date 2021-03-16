@@ -188,7 +188,7 @@ class SyncService extends Service {
                     //TODO 最大ID值，最大XID值，并且将ID和XID减去10分钟的数值，减去10分钟是防止漏了，可能存在用户在手机上线获取了一个ID，然后提交的时候网络卡了，等了3分钟，网络好了，如果那个提交页面没有关闭并且用户数据提交上去了，这时这个id可能出现插入到前面数据的可能性
                     //TODO xdata-xmysql-service的服务，获取xid，patch操作，需要更新到数据库中
 
-                    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
+                    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 5000);
 
                 } catch (error) {
                     console.log(error);
