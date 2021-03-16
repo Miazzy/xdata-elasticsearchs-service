@@ -303,7 +303,7 @@ module.exports = appInfo => {
         //查询上游存在但是下游不存在的数据，并导入下游中
         istlang: `INSERT INTO ${config.clickhouse.mysql.database}.:table SELECT * FROM mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table',  '${config.clickhouse.mysql.user}', '${config.clickhouse.mysql.password}') A WHERE A.:param_id not in (select :param_id from ${config.clickhouse.mysql.database}.:table ); `,
         //根据查询到的ID，删除数据
-        dltlang: `ALTER TABLE ${config.clickhouse.mysql.database}.:table DELETE WHERE xid = '0' and id in ( select id from mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table',  '${config.clickhouse.mysql.user}', '${config.clickhouse.mysql.password}') WHERE :param_id > ':pindex'  ) ; `,
+        dltlang: `ALTER TABLE ${config.clickhouse.mysql.database}.:table DELETE WHERE id in ( select id from mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table',  '${config.clickhouse.mysql.user}', '${config.clickhouse.mysql.password}') WHERE :param_id > ':pindex'  ) ; `,
         //更新数据
         updlang: `ALTER TABLE ${config.clickhouse.mysql.database}.:table UPDATE :update WHERE id = ':id' ; `,
         //增量同步语句

@@ -82,17 +82,18 @@ class SyncService extends Service {
             const tconfig = {};
             const { table, index, resetFlag, fieldName, pindex, syncTableName } = task;
             const clickhouse = app.ck.clickhouse;
+            // console.log(`table:${table}, resetFlag:${resetFlag}, fieldName:${fieldName}, pindex:${pindex}, syncTableName:${syncTableName} `);
 
             //只执行taskName的任务
             if (table == taskName || taskName == 'all') {
                 try {
-                    //第一步，如果没有表，则DROP表并新建表并导入数据 -- DROP TABLE IF EXISTS  xdata.bs_seal_regist; CREATE TABLE xdata.bs_seal_regist ENGINE = MergeTree ORDER BY id AS SELECT * FROM mysql('172.18.254.95:39090', 'xdata', 'bs_seal_regist', 'zhaoziyun','ziyequma') ;
-                    // console.log(`table:${table}, resetFlag:${resetFlag}, fieldName:${fieldName}, pindex:${pindex}, syncTableName:${syncTableName} `);
 
-                    //查询数据库中的pindex
+                    //第一步，如果没有表，则DROP表并新建表并导入数据 -- DROP TABLE IF EXISTS  xdata.bs_seal_regist; CREATE TABLE xdata.bs_seal_regist ENGINE = MergeTree ORDER BY id AS SELECT * FROM mysql('172.18.254.95:39090', 'xdata', 'bs_seal_regist', 'zhaoziyun','ziyequma') ;
                     const queryIndexSQL = `SELECT pindex,reset FROM ${index}.bs_sync_rec t WHERE t.dest_db_type = 'CK' and t.database = :database and t.index = :index and t.type = :type and t.params = :params `;
                     const responseIndex = await app.ck.mysql.query(queryIndexSQL, { index: index, type: table, params: fieldName, database: index });
                     console.log(`response:`, JSON.stringify(responseIndex));
+
+                    //查询数据库中的pindex,reset标识
                     if (responseIndex && responseIndex.length > 0) {
                         tconfig.pindex = responseIndex[0].pindex;
                         tconfig.reset = responseIndex[0].reset;
@@ -126,7 +127,8 @@ class SyncService extends Service {
 
                     //查询到返回值，则进行后续步骤
                     if (tconfig.queryResponse && tconfig.queryResponse.length > 0) {
-                        const { id, xid } = tconfig.queryResponse[0];
+                        let { id, xid } = tconfig.queryResponse[0];
+                        xid = (xid == '0' && xid == 0) ? '10000000000000000000000000000001' : xid;
                         console.log(`id:`, id, ` xid:`, xid);
 
                         //第三步，查询id大于当前clickhouse表中最大值ID的所有数据，并Insert表单中
@@ -144,22 +146,19 @@ class SyncService extends Service {
                         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
 
                         //第四步，查询xid大于当前clickhouse表中最大值xid得所有数据，删除clickhouse表中这些数据中存在这些ID值得记录,并Insert这些数据到clickhouse表单中 -- ALTER TABLE xdata.bs_seal_regist DELETE WHERE id in ('','','');
-                        if (xid != '0' && xid != 0) {
-                            const deleteSQL = synconfig.dltlang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'xid').replace(/:pindex/g, xid);
-                            console.log(`delete sql:`, deleteSQL);
-                            tconfig.deleteResponse = await clickhouse.query(deleteSQL).toPromise();
-                            console.log(`delete response:`, JSON.stringify(tconfig.deleteResponse), '\n\r delete sql:', deleteSQL);
-                            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
+                        const deleteSQL = synconfig.dltlang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'xid').replace(/:pindex/g, xid);
+                        console.log(`delete sql:`, deleteSQL);
+                        tconfig.deleteResponse = await clickhouse.query(deleteSQL).toPromise();
+                        console.log(`delete response:`, JSON.stringify(tconfig.deleteResponse), '\n\r delete sql:', deleteSQL);
+                        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
 
-                            const patchSQL = synconfig.inclang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'xid').replace(/:pindex/g, xid);
-                            console.log(`patch sql:`, patchSQL);
-                            tconfig.patchResponse = await clickhouse.query(patchSQL).toPromise();
-                            console.log(`patch response:`, JSON.stringify(tconfig.patchResponse), '\n\r patch sql:', patchSQL);
-                            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
-                        }
+                        const patchSQL = synconfig.inclang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'xid').replace(/:pindex/g, xid);
+                        console.log(`patch sql:`, patchSQL);
+                        tconfig.patchResponse = await clickhouse.query(patchSQL).toPromise();
+                        console.log(`patch response:`, JSON.stringify(tconfig.patchResponse), '\n\r patch sql:', patchSQL);
+                        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
 
                     }
-
 
                     /**
                      *  -- 第一步，如果没有表，则DROP表并新建表并导入数据
