@@ -313,7 +313,7 @@ module.exports = appInfo => {
             // { table: 'bs_company_flow_base', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'number', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_admin_address', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'number', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_admin_group', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'number', pindex: 0, syncTableName: 'bs_sync_rec' },
-            { table: 'bs_seal_regist', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'number', pindex: 0, syncTableName: 'bs_sync_rec' },
+            { table: 'bs_seal_regist', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
         ],
     }
 
