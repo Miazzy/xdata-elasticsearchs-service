@@ -92,13 +92,13 @@ class SyncService extends Service {
                     //第一步，如果没有表，则DROP表并新建表并导入数据 -- DROP TABLE IF EXISTS  xdata.bs_seal_regist; CREATE TABLE xdata.bs_seal_regist ENGINE = MergeTree ORDER BY id AS SELECT * FROM mysql('172.18.254.95:39090', 'xdata', 'bs_seal_regist', 'zhaoziyun','ziyequma') ;
                     const queryIndexSQL = `SELECT pindex,reset FROM ${index}.bs_sync_rec t WHERE t.dest_db_type = 'CK' and t.database = :database and t.index = :index and t.type = :type and t.params = :params `;
                     const responseIndex = await app.ck.mysql.query(queryIndexSQL, { index: index, type: table, params: fieldName, database: index });
-                    console.log(`response:`, JSON.stringify(responseIndex));
+                    // console.log(`response:`, JSON.stringify(responseIndex));
 
                     //查询数据库中的pindex,reset标识
                     if (responseIndex && responseIndex.length > 0) {
                         tconfig.pindex = responseIndex[0].pindex;
                         tconfig.reset = responseIndex[0].reset;
-                        console.log(`task config: ${JSON.stringify(tconfig)}`);
+                        // console.log(`task config: ${JSON.stringify(tconfig)}`);
                     }
 
                     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
@@ -106,17 +106,17 @@ class SyncService extends Service {
                     //如果数据库配置重新加载，则执行重新加载操作 ; 定时每天0:00，执行第一步，然后循环第二步至第四步; 注意定时执行第一步可以根据具体情况取消。
                     if (tconfig.reset == 'true' || dayjs().format('HH:mm:ss') == '00:00:00') {
                         const dropSQL = synconfig.droplang.replace(/:table/g, table);
-                        console.log(`drop sql:`, dropSQL);
+                        // console.log(`drop sql:`, dropSQL);
                         tconfig.dropResponse = await clickhouse.query(dropSQL).toPromise();
-                        console.log(`drop response:`, JSON.stringify(tconfig.dropResponse), 'drop sql:', dropSQL);
+                        // console.log(`drop response:`, JSON.stringify(tconfig.dropResponse), 'drop sql:', dropSQL);
 
                         const syncSQL = synconfig.synclang.replace(/:table/g, table);
-                        console.log(`sync sql:`, syncSQL);
+                        // console.log(`sync sql:`, syncSQL);
                         tconfig.syncResponse = await clickhouse.query(syncSQL).toPromise();
-                        console.log(`sync response:`, JSON.stringify(tconfig.syncResponse), 'sync sql:', syncSQL);
+                        // console.log(`sync response:`, JSON.stringify(tconfig.syncResponse), 'sync sql:', syncSQL);
 
                         const updateSQL = `UPDATE ${index}.bs_sync_rec t SET reset = 'false' WHERE t.index = :index and t.type = :type and t.params = :params `;
-                        console.log('update sql:', updateSQL);
+                        // console.log('update sql:', updateSQL);
                         app.ck.mysql.query(updateSQL, { index: index, type: table, params: fieldName });
                     }
 
@@ -124,13 +124,13 @@ class SyncService extends Service {
 
                     //第二步，查询clickhouse表中，最大ID值，最大XID值，并且将ID和XID减去10分钟的数值 -- select max(id) id, max(xid) xid  from xdata.bs_seal_regist;
                     const querySQL = synconfig.sctlang.replace(':table', table);
-                    console.log(`query sql: ${querySQL}`);
+                    // console.log(`query sql: ${querySQL}`);
                     try {
                         tconfig.queryResponse = await clickhouse.query(querySQL).toPromise();
-                        console.log(`query sql: ${querySQL} , response:`, JSON.stringify(tconfig.queryResponse));
+                        // console.log(`query sql: ${querySQL} , response:`, JSON.stringify(tconfig.queryResponse));
                     } catch (error) {
                         const updateSQL = `UPDATE ${index}.bs_sync_rec t SET reset = 'true' WHERE t.index = :index and t.type = :type and t.params = :params `;
-                        console.log('update sql:', updateSQL, error);
+                        // console.log('update sql:', updateSQL, error);
                         app.ck.mysql.query(updateSQL, { index: index, type: table, params: fieldName });
                     }
 
@@ -138,33 +138,33 @@ class SyncService extends Service {
                     if (tconfig.queryResponse && tconfig.queryResponse.length > 0) {
                         let { id, xid } = tconfig.queryResponse[0];
                         xid = (xid == '0' && xid == 0) ? '10000000000000000000000000000001' : xid;
-                        console.log(`id:`, id, ` xid:`, xid);
+                        // console.log(`id:`, id, ` xid:`, xid);
 
                         //第三步，查询id大于当前clickhouse表中最大值ID的所有数据，并Insert表单中
                         const insertSQL = synconfig.inclang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'id').replace(fieldType == 'number' ? /':pindex'/g : /:pindex/g, id);
-                        console.log(`insert sql:`, insertSQL);
+                        // console.log(`insert sql:`, insertSQL);
                         tconfig.insertResponse = await clickhouse.query(insertSQL).toPromise();
-                        console.log(`insert response:`, JSON.stringify(tconfig.insertResponse), '\n\r insert sql:', insertSQL);
+                        // console.log(`insert response:`, JSON.stringify(tconfig.insertResponse), '\n\r insert sql:', insertSQL);
                         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
 
                         //查询mysql表存在，但是click表不存在的数据，insert到clickhouse表中
                         const istlangSQL = synconfig.istlang.replace(/:table/g, table).replace(/:param_id/g, 'id').replace(fieldType == 'number' ? /':pindex'/g : /:pindex/g, id);
-                        console.log(`istlang sql:`, istlangSQL);
+                        // console.log(`istlang sql:`, istlangSQL);
                         tconfig.istlangResponse = await clickhouse.query(istlangSQL).toPromise();
-                        console.log(`istlang response:`, JSON.stringify(tconfig.istlangResponse), '\n\r istlang sql:', istlangSQL);
+                        // console.log(`istlang response:`, JSON.stringify(tconfig.istlangResponse), '\n\r istlang sql:', istlangSQL);
                         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
 
                         //第四步，查询xid大于当前clickhouse表中最大值xid得所有数据，删除clickhouse表中这些数据中存在这些ID值得记录,并Insert这些数据到clickhouse表单中 -- ALTER TABLE xdata.bs_seal_regist DELETE WHERE id in ('','','');
                         const deleteSQL = synconfig.dltlang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'xid').replace(/:pindex/g, xid);
-                        console.log(`delete sql:`, deleteSQL);
+                        // console.log(`delete sql:`, deleteSQL);
                         tconfig.deleteResponse = await clickhouse.query(deleteSQL).toPromise();
-                        console.log(`delete response:`, JSON.stringify(tconfig.deleteResponse), '\n\r delete sql:', deleteSQL);
+                        // console.log(`delete response:`, JSON.stringify(tconfig.deleteResponse), '\n\r delete sql:', deleteSQL);
                         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
 
                         const patchSQL = synconfig.inclang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'xid').replace(/:pindex/g, xid);
-                        console.log(`patch sql:`, patchSQL);
+                        // console.log(`patch sql:`, patchSQL);
                         tconfig.patchResponse = await clickhouse.query(patchSQL).toPromise();
-                        console.log(`patch response:`, JSON.stringify(tconfig.patchResponse), '\n\r patch sql:', patchSQL);
+                        // console.log(`patch response:`, JSON.stringify(tconfig.patchResponse), '\n\r patch sql:', patchSQL);
                         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
 
                     }
