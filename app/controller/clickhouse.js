@@ -54,6 +54,7 @@ class ClickHouseController extends Controller {
     async search() {
 
         const { ctx, app } = this;
+        const clickhouse = app.ck.clickhouse;
 
         // 获取Database名称或Index名称
         const schema = ctx.query.schema || ctx.params.schema || 'schema';
