@@ -310,10 +310,10 @@ module.exports = appInfo => {
         inclang: `INSERT INTO ${config.clickhouse.mysql.database}.:table :dest_fields select :src_fields from mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table',  '${config.clickhouse.mysql.user}', '${config.clickhouse.mysql.password}') WHERE :param_id > ':pindex' ; `,
         //同步表
         tasks: [
-            // { table: 'bs_company_flow_base', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'number', pindex: 0, syncTableName: 'bs_sync_rec' },
-            // { table: 'bs_admin_address', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'number', pindex: 0, syncTableName: 'bs_sync_rec' },
-            // { table: 'bs_admin_group', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
-            // { table: 'bs_seal_regist', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
+            { table: 'bs_company_flow_base', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'number', pindex: 0, syncTableName: 'bs_sync_rec' },
+            { table: 'bs_admin_address', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'number', pindex: 0, syncTableName: 'bs_sync_rec' },
+            { table: 'bs_admin_group', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
+            { table: 'bs_seal_regist', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
         ],
     }
 
