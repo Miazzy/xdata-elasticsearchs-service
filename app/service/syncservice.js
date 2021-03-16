@@ -80,7 +80,7 @@ class SyncService extends Service {
          */
         for (const task of synconfig.tasks) {
             const tconfig = {};
-            const { table, index, resetFlag, fieldName, pindex, syncTableName } = task;
+            const { table, index, resetFlag, fieldName, fieldType, pindex, syncTableName } = task;
             const clickhouse = app.ck.clickhouse;
             // console.log(`table:${table}, resetFlag:${resetFlag}, fieldName:${fieldName}, pindex:${pindex}, syncTableName:${syncTableName} `);
 
@@ -132,14 +132,14 @@ class SyncService extends Service {
                         console.log(`id:`, id, ` xid:`, xid);
 
                         //第三步，查询id大于当前clickhouse表中最大值ID的所有数据，并Insert表单中
-                        const insertSQL = synconfig.inclang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'id').replace(/:pindex/g, id);
+                        const insertSQL = synconfig.inclang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'id').replace(fieldType == 'number' ? /':pindex'/g : /:pindex/g, id);
                         console.log(`insert sql:`, insertSQL);
                         tconfig.insertResponse = await clickhouse.query(insertSQL).toPromise();
                         console.log(`insert response:`, JSON.stringify(tconfig.insertResponse), '\n\r insert sql:', insertSQL);
                         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
 
                         //查询mysql表存在，但是click表不存在的数据，insert到clickhouse表中
-                        const istlangSQL = synconfig.istlang.replace(/:table/g, table).replace(/:param_id/g, 'id').replace(/:pindex/g, id);
+                        const istlangSQL = synconfig.istlang.replace(/:table/g, table).replace(/:param_id/g, 'id').replace(fieldType == 'number' ? /':pindex'/g : /:pindex/g, id);
                         console.log(`istlang sql:`, istlangSQL);
                         tconfig.istlangResponse = await clickhouse.query(istlangSQL).toPromise();
                         console.log(`istlang response:`, JSON.stringify(tconfig.istlangResponse), '\n\r istlang sql:', istlangSQL);
