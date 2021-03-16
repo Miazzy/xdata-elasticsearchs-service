@@ -34,4 +34,20 @@ module.exports = app => {
     // elasticsearch 同步
     router.get('/api/es/sync', controller.essync.index);
 
+
+    // clickhouse 新增
+    router.post('/api/ck/index', controller.clickhouse.index);
+
+    // clickhouse 查询
+    router.get('/api/ck/search/:schema/:type', controller.clickhouse.search);
+
+    // clickhouse 修改
+    router.patch('/api/ck/patch', controller.clickhouse.index);
+
+    // clickhouse 删除
+    router.delete('/api/ck/delete', controller.clickhouse.delete);
+
+    // clickhouse 同步
+    router.get('/api/ck/sync', controller.cksync.index);
+
 };

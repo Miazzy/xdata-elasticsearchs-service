@@ -24,7 +24,7 @@ class CkSyncController extends Controller {
         try {
             ctx.body = await ctx.service.syncservice.doCkTask(taskName);
         } catch (error) {
-            ctx.body = { err: -99, code: -99, success: false, pindex: -1, message: error };
+            ctx.body = { err: -99, code: -99, success: false, pindex: -1, taskName, message: error };
         }
     }
 
