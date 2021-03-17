@@ -102,7 +102,7 @@ class SyncService extends Service {
                     } else {
                         const insertSQL = `INSERT INTO ${index}.bs_sync_rec (\`database\`, \`index\`, type, params, pindex, ntable, last_pindex, dest_db_type, reset) VALUES (:database, :index, :type, :params, :pindex, :ntable, :last_pindex, :dest_db_type, :reset); `;
                         console.log('insert bs_sync_rec sql:', insertSQL);
-                        await mysql.query(insertSQL, { pindex: 0, index: index, type: table, params: fieldName, database: index, ntable: 0, last_pindex: 0, dest_db_type: 'CK', reset: 'true' });
+                        await mysql.query(insertSQL, { pindex: 0, index: index, type: table, params: fieldName, database: index, ntable: 0, last_pindex: 0, dest_db_type: 'CK', reset: 'false' });
                     }
 
                     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
@@ -131,7 +131,7 @@ class SyncService extends Service {
 
                         const updateSQL = `UPDATE ${index}.bs_sync_rec t SET reset = 'false' WHERE t.index = :index and t.type = :type and t.params = :params `;
                         console.log('update sql:', updateSQL);
-                        mysql.query(updateSQL, { index: index, type: table, params: fieldName });
+                        await mysql.query(updateSQL, { index: index, type: table, params: fieldName });
 
                         //如果需要执行重置操作，则需要drop字段xid,在新增字段xid
                         if (tconfig.reset == 'true') {
@@ -149,8 +149,8 @@ class SyncService extends Service {
                         tconfig.queryResponse = await clickhouse.query(querySQL).toPromise();
                         console.log(`query sql: ${querySQL} , response:`, JSON.stringify(tconfig.queryResponse));
                     } catch (error) {
-                        const updateSQL = `UPDATE ${index}.bs_sync_rec t SET reset = 'true' WHERE t.index = :index and t.type = :type and t.params = :params `;
-                        mysql.query(updateSQL, { index: index, type: table, params: fieldName });
+                        // const updateSQL = `UPDATE ${index}.bs_sync_rec t SET reset = 'false' WHERE t.index = :index and t.type = :type and t.params = :params `;
+                        // await mysql.query(updateSQL, { index: index, type: table, params: fieldName });
                         // console.log('update sql:', updateSQL, error); // console.log('error: ', error);
                         //如果错误信息含有Missing columns，则需要drop字段xid,在新增字段xid
                         if (error.toString().includes('Missing columns:')) {
