@@ -7,6 +7,7 @@
         "declarations": true
     },
     "dependencies": {
+        "@apla/clickhouse": "^1.6.4",
         "@elastic/elasticsearch": "^7.10.0",
         "@types/node": "^14.14.6",
         "acorn": "^7.4.1",

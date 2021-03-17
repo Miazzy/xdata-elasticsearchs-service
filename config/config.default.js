@@ -273,7 +273,10 @@ module.exports = appInfo => {
         //下游ClickHouse服务
         clickhouse: {
             url: 'http://172.18.254.95',
+            host: '172.18.254.95',
             port: '8123',
+            user: 'admin',
+            password: '123',
             debug: false,
             basicAuth: {
                 username: 'admin',
@@ -292,6 +295,10 @@ module.exports = appInfo => {
     }
 
     config.clickhousesync = {
+        //drop字段
+        dropcolumn: `ALTER TABLE ${config.clickhouse.mysql.database}.:table drop column xid; `,
+        //新增字段
+        addcolumn: `ALTER TABLE ${config.clickhouse.mysql.database}.:table add xid varchar(36) default 0 null; `,
         //DROP表
         droplang: `DROP TABLE IF EXISTS ${config.clickhouse.mysql.database}.:table ; `,
         //全量同步语句
@@ -310,14 +317,12 @@ module.exports = appInfo => {
         inclang: `INSERT INTO ${config.clickhouse.mysql.database}.:table :dest_fields select :src_fields from mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table',  '${config.clickhouse.mysql.user}', '${config.clickhouse.mysql.password}') WHERE :param_id > ':pindex' ; `,
         //同步表
         tasks: [
-
             // { table: 'bs_seal_regist', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_admin_address', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'number', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_admin_group', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_company_flow_base', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'number', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_year_job_logging', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_work_examine_items', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
-
             // { table: 'bs_work_examine', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_work_contact_item', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_work_contact', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
@@ -331,7 +336,6 @@ module.exports = appInfo => {
             // { table: 'bs_travel', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_transaction', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_traffic_allowance', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
-
             // { table: 'bs_team', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_task_logging', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_task_assign', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
@@ -344,7 +348,6 @@ module.exports = appInfo => {
             // { table: 'bs_shifts_apply', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_seal_registed', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_seal_regist_finance', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
-
             // { table: 'bs_seal_regist_archive', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_seal_query_rights', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_seal_normal', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
@@ -357,7 +360,6 @@ module.exports = appInfo => {
             // { table: 'bs_resign', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_questions', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_questions_rs', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
-
             // { table: 'bs_reserve', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_requirement', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_report_job_logging', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
@@ -370,7 +372,6 @@ module.exports = appInfo => {
             // { table: 'bs_recruit', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_record_borrow', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_ability_quota', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
-
             // { table: 'bs_announce', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_company_flow_alteration', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_company_flow', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
@@ -383,7 +384,6 @@ module.exports = appInfo => {
             // { table: 'bs_company_branch', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_company_base', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_company', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
-
             // { table: 'bs_communication', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_comments', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_car_apply', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
@@ -396,7 +396,6 @@ module.exports = appInfo => {
             // { table: 'bs_attendance_details', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_attendance', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_ask_report', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
-
             // { table: 'bs_approve_node', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_approve_general', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_approve', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
@@ -409,7 +408,6 @@ module.exports = appInfo => {
             // { table: 'bs_plan_task_item', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_plan_task', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_payment', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
-
             // { table: 'bs_overtime', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_official_seal', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_notice', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
@@ -422,7 +420,6 @@ module.exports = appInfo => {
             // { table: 'bs_lost_property', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_lock_info', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_leave', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
-
             // { table: 'bs_job_logging', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_issue', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_hrmschedulesign', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
@@ -436,7 +433,6 @@ module.exports = appInfo => {
             // { table: 'bs_favor_info', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_entry_man', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_entry_job', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
-
             // { table: 'bs_egress', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_dynamic', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_document_item', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
@@ -446,7 +442,6 @@ module.exports = appInfo => {
             // { table: 'bs_company_senior_executive', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_company_manage_taxpayer', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_company_manage_tax_credits', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
-
             // { table: 'bs_company_manage_supplier', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_company_manage_recruit', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_company_manage_permission', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
@@ -462,7 +457,6 @@ module.exports = appInfo => {
             // { table: 'bs_company_inp_websiteorapp', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_company_inp_trademark', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_company_inp_patent', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
-
             // { table: 'bs_company_inp_copyright', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_company_inp_certification', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_company_info', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
@@ -472,7 +466,6 @@ module.exports = appInfo => {
             // { table: 'bs_company_flow_link', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_company_flow_inc', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'bs_company_flow_data', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
-
             // { table: 'pr_template', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'pr_rights', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'pr_log_unode_history', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
@@ -488,7 +481,6 @@ module.exports = appInfo => {
             // { table: 'pr_businesses', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'pr_business_status', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
             // { table: 'pr_business', index: 'xdata', resetFlag: true, fieldName: 'id', fieldType: 'string', pindex: 0, syncTableName: 'bs_sync_rec' },
-
         ],
     }
 

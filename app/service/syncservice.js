@@ -81,7 +81,7 @@ class SyncService extends Service {
         for (const task of synconfig.tasks) {
             const tconfig = {};
             const { table, index, resetFlag, fieldName, fieldType, pindex, syncTableName } = task;
-            const clickhouse = app.ck.clickhouse;
+            const { clickhouse, database, mysql } = app.ck;
             Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
             console.log(`table:${table}, resetFlag:${resetFlag}, fieldName:${fieldName}, pindex:${pindex}, syncTableName:${syncTableName} `);
 
@@ -91,7 +91,7 @@ class SyncService extends Service {
 
                     //第一步，如果没有表，则DROP表并新建表并导入数据 -- DROP TABLE IF EXISTS  xdata.bs_seal_regist; CREATE TABLE xdata.bs_seal_regist ENGINE = MergeTree ORDER BY id AS SELECT * FROM mysql('172.18.254.95:39090', 'xdata', 'bs_seal_regist', 'zhaoziyun','ziyequma') ;
                     const queryIndexSQL = `SELECT pindex,reset FROM ${index}.bs_sync_rec t WHERE t.dest_db_type = 'CK' and t.database = :database and t.index = :index and t.type = :type and t.params = :params `;
-                    const responseIndex = await app.ck.mysql.query(queryIndexSQL, { index: index, type: table, params: fieldName, database: index });
+                    const responseIndex = await mysql.query(queryIndexSQL, { index: index, type: table, params: fieldName, database: index });
                     console.log(`response:`, JSON.stringify(responseIndex));
 
                     //查询数据库中的pindex,reset标识
@@ -102,7 +102,7 @@ class SyncService extends Service {
                     } else {
                         const insertSQL = `INSERT INTO ${index}.bs_sync_rec (\`database\`, \`index\`, type, params, pindex, ntable, last_pindex, dest_db_type, reset) VALUES (:database, :index, :type, :params, :pindex, :ntable, :last_pindex, :dest_db_type, :reset); `;
                         console.log('insert bs_sync_rec sql:', insertSQL);
-                        await app.ck.mysql.query(insertSQL, { pindex: 0, index: index, type: table, params: fieldName, database: index, ntable: 0, last_pindex: 0, dest_db_type: 'CK', reset: 'true' });
+                        await mysql.query(insertSQL, { pindex: 0, index: index, type: table, params: fieldName, database: index, ntable: 0, last_pindex: 0, dest_db_type: 'CK', reset: 'true' });
                     }
 
                     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
@@ -112,24 +112,42 @@ class SyncService extends Service {
                         const dropSQL = synconfig.droplang.replace(/:table/g, table);
                         console.log(`drop sql:`, dropSQL);
                         try {
-                            tconfig.dropResponse = await clickhouse.query(dropSQL).toPromise();
+                            tconfig.dropResponse = await database.querying(dropSQL);
                         } catch (error) {
-                            // console.log(error);
+                            // tconfig.dropResponse = await clickhouse.query(dropSQL).toPromise();
+                            console.log(error);
                         }
                         console.log(`drop response:`, JSON.stringify(tconfig.dropResponse), 'drop sql:', dropSQL);
 
                         const syncSQL = synconfig.synclang.replace(/:table/g, table);
                         console.log(`sync sql:`, syncSQL);
                         try {
-                            tconfig.syncResponse = await clickhouse.query(syncSQL).toPromise();
+                            tconfig.syncResponse = await database.querying(syncSQL);
                         } catch (error) {
-                            // console.log(error);
+                            // tconfig.syncResponse = await clickhouse.query(syncSQL).toPromise();
+                            console.log(error);
                         }
                         console.log(`sync response:`, JSON.stringify(tconfig.syncResponse), 'sync sql:', syncSQL);
 
                         const updateSQL = `UPDATE ${index}.bs_sync_rec t SET reset = 'false' WHERE t.index = :index and t.type = :type and t.params = :params `;
                         console.log('update sql:', updateSQL);
-                        app.ck.mysql.query(updateSQL, { index: index, type: table, params: fieldName });
+                        mysql.query(updateSQL, { index: index, type: table, params: fieldName });
+
+                        //如果需要执行重置操作，则需要drop字段xid,在新增字段xid
+                        if (tconfig.reset == 'true') {
+                            const dropcolumnSQL = synconfig.dropcolumn.replace(/:table/g, table);
+                            const addcolumnSQL = synconfig.addcolumn.replace(/:table/g, table);
+                            try {
+                                mysql.query(dropcolumnSQL);
+                            } catch (error) {
+                                console.log(`drop column sql:`, dropcolumnSQL);
+                            }
+                            try {
+                                mysql.query(addcolumnSQL);
+                            } catch (error) {
+                                console.log(`add column sql:`, addcolumnSQL);
+                            }
+                        }
                     }
 
                     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
@@ -138,12 +156,13 @@ class SyncService extends Service {
                     const querySQL = synconfig.sctlang.replace(':table', table);
                     console.log(`query sql: ${querySQL}`);
                     try {
+                        //tconfig.queryResponse = await database.querying(querySQL);
                         tconfig.queryResponse = await clickhouse.query(querySQL).toPromise();
                         console.log(`query sql: ${querySQL} , response:`, JSON.stringify(tconfig.queryResponse));
                     } catch (error) {
                         const updateSQL = `UPDATE ${index}.bs_sync_rec t SET reset = 'true' WHERE t.index = :index and t.type = :type and t.params = :params `;
+                        mysql.query(updateSQL, { index: index, type: table, params: fieldName });
                         console.log('update sql:', updateSQL, error);
-                        app.ck.mysql.query(updateSQL, { index: index, type: table, params: fieldName });
                     }
 
                     //查询到返回值，则进行后续步骤
@@ -156,7 +175,8 @@ class SyncService extends Service {
                         const insertSQL = synconfig.inclang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'id').replace(fieldType == 'number' ? /':pindex'/g : /:pindex/g, id);
                         console.log(`insert sql:`, insertSQL);
                         try {
-                            tconfig.insertResponse = await clickhouse.query(insertSQL).toPromise();
+                            tconfig.insertResponse = await database.querying(insertSQL);
+                            // tconfig.insertResponse = await clickhouse.query(insertSQL).toPromise();
                         } catch (error) {
                             //console.log(error);
                         }
@@ -167,7 +187,8 @@ class SyncService extends Service {
                         const istlangSQL = synconfig.istlang.replace(/:table/g, table).replace(/:param_id/g, 'id').replace(fieldType == 'number' ? /':pindex'/g : /:pindex/g, id);
                         console.log(`istlang sql:`, istlangSQL);
                         try {
-                            tconfig.istlangResponse = await clickhouse.query(istlangSQL).toPromise();
+                            tconfig.istlangResponse = await database.querying(istlangSQL);
+                            // tconfig.istlangResponse = await clickhouse.query(istlangSQL).toPromise();
                         } catch (error) {
                             //console.log(error);
                         }
@@ -178,9 +199,10 @@ class SyncService extends Service {
                         const deleteSQL = synconfig.dltlang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'xid').replace(/:pindex/g, xid);
                         console.log(`delete sql:`, deleteSQL);
                         try {
-                            tconfig.deleteResponse = await clickhouse.query(deleteSQL).toPromise();
+                            tconfig.deleteResponse = await database.querying(deleteSQL);
                         } catch (error) {
-                            //console.log(error);
+                            // tconfig.deleteResponse = await clickhouse.query(deleteSQL).toPromise();
+                            // console.log(error);
                         }
                         console.log(`delete response:`, JSON.stringify(tconfig.deleteResponse), '\n\r delete sql:', deleteSQL);
                         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
@@ -188,9 +210,10 @@ class SyncService extends Service {
                         const patchSQL = synconfig.inclang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'xid').replace(/:pindex/g, xid);
                         console.log(`patch sql:`, patchSQL);
                         try {
-                            tconfig.patchResponse = await clickhouse.query(patchSQL).toPromise();
+                            tconfig.patchResponse = await database.querying(patchSQL);
                         } catch (error) {
-                            //console.log(error);
+                            // tconfig.patchResponse = await clickhouse.query(patchSQL).toPromise();
+                            // console.log(error);
                         }
                         console.log(`patch response:`, JSON.stringify(tconfig.patchResponse), '\n\r patch sql:', patchSQL);
                         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);

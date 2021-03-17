@@ -7,6 +7,7 @@ const rds = require('ali-rds');
 const elasticsearch = require('elasticsearch');
 const base64Config = require('./config/base64.config');
 const { ClickHouse } = require('clickhouse');
+const ClickHouses = require('@apla/clickhouse')
 
 base64Config.init();
 
@@ -139,6 +140,7 @@ module.exports = app => {
 
             app.ck = {};
             app.ck.clickhouse = new ClickHouse(app.config.clickhouse.clickhouse);
+            app.ck.database = new ClickHouses(app.config.clickhouse.clickhouse);
             app.ck.mysql = createMySQLClient(app.config.clickhouse.mysql, app);
             // console.log(`clickhouse config:`, app.config.clickhouse.clickhouse);
 
