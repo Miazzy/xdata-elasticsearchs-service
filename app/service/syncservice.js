@@ -151,8 +151,7 @@ class SyncService extends Service {
                     } catch (error) {
                         const updateSQL = `UPDATE ${index}.bs_sync_rec t SET reset = 'true' WHERE t.index = :index and t.type = :type and t.params = :params `;
                         mysql.query(updateSQL, { index: index, type: table, params: fieldName });
-                        // console.log('update sql:', updateSQL, error);
-                        // console.log('error: ', error);
+                        // console.log('update sql:', updateSQL, error); // console.log('error: ', error);
                         //如果错误信息含有Missing columns，则需要drop字段xid,在新增字段xid
                         if (error.toString().includes('Missing columns:')) {
                             const dropcolumnSQL = synconfig.dropcolumn.replace(/:table/g, table);
