@@ -166,6 +166,7 @@ class SyncService extends Service {
                     }
 
                     //查询到返回值，则进行后续步骤
+                    /**
                     if (tconfig.queryResponse && tconfig.queryResponse.length > 0) {
                         let { id, xid } = tconfig.queryResponse[0];
                         xid = (xid == '0' && xid == 0) ? '10000000000000000000000000000001' : xid;
@@ -219,6 +220,7 @@ class SyncService extends Service {
                         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
 
                     }
+                     */
 
                     /**
                      *  -- 第一步，如果没有表，则DROP表并新建表并导入数据
