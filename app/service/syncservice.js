@@ -135,18 +135,7 @@ class SyncService extends Service {
 
                         //如果需要执行重置操作，则需要drop字段xid,在新增字段xid
                         if (tconfig.reset == 'true') {
-                            const dropcolumnSQL = synconfig.dropcolumn.replace(/:table/g, table);
-                            const addcolumnSQL = synconfig.addcolumn.replace(/:table/g, table);
-                            try {
-                                mysql.query(dropcolumnSQL);
-                            } catch (error) {
-                                console.log(`drop column sql:`, dropcolumnSQL);
-                            }
-                            try {
-                                mysql.query(addcolumnSQL);
-                            } catch (error) {
-                                console.log(`add column sql:`, addcolumnSQL);
-                            }
+
                         }
                     }
 
@@ -162,7 +151,23 @@ class SyncService extends Service {
                     } catch (error) {
                         const updateSQL = `UPDATE ${index}.bs_sync_rec t SET reset = 'true' WHERE t.index = :index and t.type = :type and t.params = :params `;
                         mysql.query(updateSQL, { index: index, type: table, params: fieldName });
-                        console.log('update sql:', updateSQL, error);
+                        // console.log('update sql:', updateSQL, error);
+                        // console.log('error: ', error);
+                        //如果错误信息含有Missing columns，则需要drop字段xid,在新增字段xid
+                        if (error.toString().includes('Missing columns:')) {
+                            const dropcolumnSQL = synconfig.dropcolumn.replace(/:table/g, table);
+                            const addcolumnSQL = synconfig.addcolumn.replace(/:table/g, table);
+                            try {
+                                mysql.query(dropcolumnSQL);
+                            } catch (error) {
+                                console.log(`drop column sql:`, dropcolumnSQL);
+                            }
+                            try {
+                                mysql.query(addcolumnSQL);
+                            } catch (error) {
+                                console.log(`add column sql:`, addcolumnSQL);
+                            }
+                        }
                     }
 
                     //查询到返回值，则进行后续步骤
