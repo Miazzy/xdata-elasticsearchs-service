@@ -69,7 +69,7 @@ class SyncService extends Service {
         const { ctx, app } = this;
         const config = app.config.clickhouse;
         const synconfig = app.config.clickhousesync;
-        console.log(`config: ${JSON.stringify(config)} , synconfig: ${JSON.stringify(synconfig)}`);
+        // console.log(`config: ${JSON.stringify(config)} , synconfig: ${JSON.stringify(synconfig)}`);
 
         /**
          -- 第一步，如果没有表，则DROP表并新建表并导入数据 -- DROP TABLE IF EXISTS  xdata.bs_seal_regist; CREATE TABLE xdata.bs_seal_regist ENGINE = MergeTree ORDER BY id AS SELECT * FROM mysql('172.18.254.95:39090', 'xdata', 'bs_seal_regist', 'zhaoziyun','ziyequma') ;
@@ -83,7 +83,7 @@ class SyncService extends Service {
             const { table, index, resetFlag, fieldName, fieldType, pindex, syncTableName } = task;
             const { clickhouse, database, mysql } = app.ck;
             Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
-            console.log(`table:${table}, resetFlag:${resetFlag}, fieldName:${fieldName}, pindex:${pindex}, syncTableName:${syncTableName} `);
+            // console.log(`table:${table}, resetFlag:${resetFlag}, fieldName:${fieldName}, pindex:${pindex}, syncTableName:${syncTableName} `);
 
             //只执行taskName的任务
             if (table == taskName || taskName == 'all') {
@@ -92,13 +92,13 @@ class SyncService extends Service {
                     //第一步，如果没有表，则DROP表并新建表并导入数据 -- DROP TABLE IF EXISTS  xdata.bs_seal_regist; CREATE TABLE xdata.bs_seal_regist ENGINE = MergeTree ORDER BY id AS SELECT * FROM mysql('172.18.254.95:39090', 'xdata', 'bs_seal_regist', 'zhaoziyun','ziyequma') ;
                     const queryIndexSQL = `SELECT pindex,reset FROM ${index}.bs_sync_rec t WHERE t.dest_db_type = 'CK' and t.database = :database and t.index = :index and t.type = :type and t.params = :params `;
                     const responseIndex = await mysql.query(queryIndexSQL, { index: index, type: table, params: fieldName, database: index });
-                    console.log(`response:`, JSON.stringify(responseIndex));
+                    // console.log(`response:`, JSON.stringify(responseIndex));
 
                     //查询数据库中的pindex,reset标识
                     if (responseIndex && responseIndex.length > 0) {
                         tconfig.pindex = responseIndex[0].pindex;
                         tconfig.reset = responseIndex[0].reset;
-                        console.log(`task config: ${JSON.stringify(tconfig)}`);
+                        // console.log(`task config: ${JSON.stringify(tconfig)}`);
                     } else {
                         const insertSQL = `INSERT INTO ${index}.bs_sync_rec (\`database\`, \`index\`, type, params, pindex, ntable, last_pindex, dest_db_type, reset) VALUES (:database, :index, :type, :params, :pindex, :ntable, :last_pindex, :dest_db_type, :reset); `;
                         console.log('insert bs_sync_rec sql:', insertSQL);
@@ -154,11 +154,11 @@ class SyncService extends Service {
                         // console.log('update sql:', updateSQL, error); // console.log('error: ', error);
                         //如果错误信息含有Missing columns，则需要drop字段xid,在新增字段xid
                         if (error.toString().includes('Missing columns:')) {
-                            // const dropcolumnSQL = synconfig.dropcolumn.replace(/:table/g, table);
-                            // mysql.query(dropcolumnSQL);
                             try {
-                                const addcolumnSQL = synconfig.addcolumn.replace(/:table/g, table);
-                                mysql.query(addcolumnSQL);
+                                // const dropcolumnSQL = synconfig.dropcolumn.replace(/:table/g, table);
+                                // mysql.query(dropcolumnSQL);
+                                // const addcolumnSQL = synconfig.addcolumn.replace(/:table/g, table);
+                                // mysql.query(addcolumnSQL);
                             } catch (error) {
                                 console.log(`add column sql:`, addcolumnSQL);
                             }
@@ -166,7 +166,6 @@ class SyncService extends Service {
                     }
 
                     //查询到返回值，则进行后续步骤
-                    /**
                     if (tconfig.queryResponse && tconfig.queryResponse.length > 0) {
                         let { id, xid } = tconfig.queryResponse[0];
                         xid = (xid == '0' && xid == 0) ? '10000000000000000000000000000001' : xid;
@@ -220,7 +219,7 @@ class SyncService extends Service {
                         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
 
                     }
-                     */
+
 
                     /**
                      *  -- 第一步，如果没有表，则DROP表并新建表并导入数据
