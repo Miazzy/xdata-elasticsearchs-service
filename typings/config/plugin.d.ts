@@ -17,6 +17,7 @@ import 'egg-view';
 import 'egg-cors';
 import 'egg-cache';
 import 'egg-mysql';
+import 'egg-redlock';
 import 'egg-redis';
 import 'egg-rate-limiters';
 import { EggPluginItem } from 'egg';
@@ -41,6 +42,7 @@ declare module 'egg' {
     mysql?: EggPluginItem;
     oracle?: EggPluginItem;
     mssql?: EggPluginItem;
+    redlock?: EggPluginItem;
     httpProxy?: EggPluginItem;
     redis?: EggPluginItem;
     nacos?: EggPluginItem;

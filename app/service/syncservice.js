@@ -71,7 +71,7 @@ class SyncService extends Service {
         const synconfig = app.config.clickhousesync;
 
         //新增分布式锁，先上锁，在执行，避免并发问题
-        await app.redlock.lock('xdata-clickhouse-service:cktask', 1000);
+        const lock = await app.redlock.lock('locks:xdata.clickhouse.service.cktask:30000', 1000);
 
         // console.log(`config: ${JSON.stringify(config)} , synconfig: ${JSON.stringify(synconfig)}`);
 
@@ -91,12 +91,14 @@ class SyncService extends Service {
 
             //只执行taskName的任务
             if (table == taskName || taskName == 'all') {
+
                 try {
 
                     //第一步，如果没有表，则DROP表并新建表并导入数据 -- DROP TABLE IF EXISTS  xdata.bs_seal_regist; CREATE TABLE xdata.bs_seal_regist ENGINE = MergeTree ORDER BY id AS SELECT * FROM mysql('172.18.254.95:39090', 'xdata', 'bs_seal_regist', 'zhaoziyun','ziyequma') ;
                     const queryIndexSQL = `SELECT pindex,reset FROM ${index}.bs_sync_rec t WHERE t.dest_db_type = 'CK' and t.database = :database and t.index = :index and t.type = :type and t.params = :params `;
+                    const insertSQL = `INSERT INTO ${index}.bs_sync_rec (\`database\`, \`index\`, type, params, pindex, ntable, last_pindex, dest_db_type, reset) VALUES (:database, :index, :type, :params, :pindex, :ntable, :last_pindex, :dest_db_type, :reset); `;
+
                     const responseIndex = await mysql.query(queryIndexSQL, { index: index, type: table, params: fieldName, database: index });
-                    // console.log(`response:`, JSON.stringify(responseIndex));
 
                     //查询数据库中的pindex,reset标识
                     if (responseIndex && responseIndex.length > 0) {
@@ -104,9 +106,8 @@ class SyncService extends Service {
                         tconfig.reset = responseIndex[0].reset;
                         // console.log(`task config: ${JSON.stringify(tconfig)}`);
                     } else {
-                        const insertSQL = `INSERT INTO ${index}.bs_sync_rec (\`database\`, \`index\`, type, params, pindex, ntable, last_pindex, dest_db_type, reset) VALUES (:database, :index, :type, :params, :pindex, :ntable, :last_pindex, :dest_db_type, :reset); `;
-                        console.log('insert bs_sync_rec sql:', insertSQL);
                         await mysql.query(insertSQL, { pindex: 0, index: index, type: table, params: fieldName, database: index, ntable: 0, last_pindex: 0, dest_db_type: 'CK', reset: 'false' });
+                        console.log('insert bs_sync_rec sql:', insertSQL);
                     }
 
                     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
@@ -114,32 +115,20 @@ class SyncService extends Service {
                     //如果数据库配置重新加载，则执行重新加载操作 ; 定时每天0:00，执行第一步，然后循环第二步至第四步; 注意定时执行第一步可以根据具体情况取消。
                     if (tconfig.reset == 'true' || dayjs().format('HH:mm:ss') == '00:00:00') {
                         const dropSQL = synconfig.droplang.replace(/:table/g, table);
-                        console.log(`drop sql:`, dropSQL);
+                        const syncSQL = synconfig.synclang.replace(/:table/g, table);
+                        const updateSQL = `UPDATE ${index}.bs_sync_rec t SET reset = 'false' WHERE t.index = :index and t.type = :type and t.params = :params `;
                         try {
                             tconfig.dropResponse = await database.querying(dropSQL);
-                        } catch (error) {
-                            // tconfig.dropResponse = await clickhouse.query(dropSQL).toPromise();
-                            console.log(error);
-                        }
-                        console.log(`drop response:`, JSON.stringify(tconfig.dropResponse), 'drop sql:', dropSQL);
-
-                        const syncSQL = synconfig.synclang.replace(/:table/g, table);
-                        console.log(`sync sql:`, syncSQL);
-                        try {
                             tconfig.syncResponse = await database.querying(syncSQL);
+                            tconfig.updateResponse = await mysql.query(updateSQL, { index: index, type: table, params: fieldName });
                         } catch (error) {
-                            // tconfig.syncResponse = await clickhouse.query(syncSQL).toPromise();
                             console.log(error);
                         }
-                        console.log(`sync response:`, JSON.stringify(tconfig.syncResponse), 'sync sql:', syncSQL);
-
-                        const updateSQL = `UPDATE ${index}.bs_sync_rec t SET reset = 'false' WHERE t.index = :index and t.type = :type and t.params = :params `;
-                        console.log('update sql:', updateSQL);
-                        await mysql.query(updateSQL, { index: index, type: table, params: fieldName });
-
                         //如果需要执行重置操作，则需要drop字段xid,在新增字段xid
                         if (tconfig.reset == 'true') {
-
+                            console.log(`drop sql:`, dropSQL);
+                            console.log(`sync sql:`, syncSQL);
+                            console.log('update sql:', updateSQL);
                         }
                     }
 
@@ -249,7 +238,7 @@ class SyncService extends Service {
             }
         }
 
-        await app.redlock.unlock();
+        await app.redlock.unlock(lock);
 
     }
 
