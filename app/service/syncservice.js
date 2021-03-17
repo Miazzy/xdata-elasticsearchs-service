@@ -69,6 +69,10 @@ class SyncService extends Service {
         const { ctx, app } = this;
         const config = app.config.clickhouse;
         const synconfig = app.config.clickhousesync;
+
+        //新增分布式锁，先上锁，在执行，避免并发问题
+        await app.redlock.lock('xdata-clickhouse-service:cktask', 1000);
+
         // console.log(`config: ${JSON.stringify(config)} , synconfig: ${JSON.stringify(synconfig)}`);
 
         /**
@@ -244,6 +248,8 @@ class SyncService extends Service {
 
             }
         }
+
+        await app.redlock.unlock();
 
     }
 

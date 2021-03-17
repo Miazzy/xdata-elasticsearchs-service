@@ -36,6 +36,8 @@
         "egg-proxy": "^1.2.0",
         "egg-rate-limiters": "^1.0.1",
         "egg-redis": "^2.4.0",
+        "egg-redlock": "^1.0.0",
+        "egg-redlock-plugin": "^1.0.0",
         "egg-scripts": "^2.11.0",
         "elasql": "^1.0.3",
         "elasticsearchclient": "^0.5.3",

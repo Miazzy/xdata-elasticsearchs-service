@@ -294,6 +294,27 @@ module.exports = appInfo => {
         },
     }
 
+    config.locker = {
+        name: '',
+        retryLater: 20, // 没有获取到锁的时候，过多长时间再次尝试获取锁，单位: ms
+        timeout: 60000, // 超过多长时间没有获取到锁，则获取锁失败, 单位: ms
+        ttl: 10, // 锁的超时时间, 单位: s
+    }
+
+    config.redlock = {
+        client: {
+            nodes: [{
+                host: '172.18.254.95',
+                port: 6381,
+            }, ]
+        },
+        driftFactor: 0.01, // time in ms // the expected clock drift; for more details
+        retryCount: 10, // to lock a resource before erroring // the max number of times Redlock will attempt
+        retryDelay: 400, // time in ms // the time in ms between attempts
+        retryJitter: 400, // time in ms // the max time in ms randomly added to retries // to improve performance under high contention
+        useAgent: false,
+    }
+
     config.clickhousesync = {
         //drop字段
         dropcolumn: `ALTER TABLE ${config.clickhouse.mysql.database}.:table drop column xid; `,

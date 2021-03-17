@@ -40,6 +40,11 @@ module.exports = {
         package: 'egg-mssql',
     },
 
+    redlock: {
+        enable: true,
+        package: 'egg-redlock',
+    },
+
     httpProxy: {
         enable: false,
         package: 'egg-gateway-proxy',
