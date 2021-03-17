@@ -86,6 +86,7 @@ class SyncService extends Service {
             const tconfig = {};
             const { table, index, resetFlag, fieldName, fieldType, pindex, syncTableName } = task;
             const { clickhouse, database, mysql } = app.ck;
+            const optSQL = synconfig.optlang.replace(/:table/g, table);
             Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
             // console.log(`table:${table}, resetFlag:${resetFlag}, fieldName:${fieldName}, pindex:${pindex}, syncTableName:${syncTableName} `);
 
@@ -114,21 +115,40 @@ class SyncService extends Service {
 
                     //如果数据库配置重新加载，则执行重新加载操作 ; 定时每天0:00，执行第一步，然后循环第二步至第四步; 注意定时执行第一步可以根据具体情况取消。
                     if (tconfig.reset == 'true' || dayjs().format('HH:mm:ss') == '00:00:00') {
+
+                        const updateSQL = `UPDATE ${index}.bs_sync_rec t SET reset = 'false' WHERE t.index = :index and t.type = :type and t.params = :params `;
                         const dropSQL = synconfig.droplang.replace(/:table/g, table);
                         const syncSQL = synconfig.synclang.replace(/:table/g, table);
-                        const updateSQL = `UPDATE ${index}.bs_sync_rec t SET reset = 'false' WHERE t.index = :index and t.type = :type and t.params = :params `;
+                        const modifySQL = synconfig.ctimelang.replace(/:table/g, table).replace(/:operate/g, 'modify');
+                        const addSQL = synconfig.ctimelang.replace(/:table/g, table).replace(/:operate/g, 'add');
+
                         try {
-                            tconfig.dropResponse = await database.querying(dropSQL);
-                            tconfig.syncResponse = await database.querying(syncSQL);
+                            tconfig.modifyResponse = await mysql.query(modifySQL, { index: index, type: table, params: fieldName });
+                        } catch (error) {
+                            tconfig.addResponse = await mysql.query(addSQL, { index: index, type: table, params: fieldName });
+                        }
+
+                        try {
                             tconfig.updateResponse = await mysql.query(updateSQL, { index: index, type: table, params: fieldName });
                         } catch (error) {
                             console.log(error);
                         }
+
+                        try {
+                            tconfig.dropResponse = await database.querying(dropSQL);
+                            tconfig.syncResponse = await database.querying(syncSQL);
+                            tconfig.optResponse = await database.querying(optSQL);
+                        } catch (error) {
+                            console.log(error);
+                        }
+
                         //如果需要执行重置操作，则需要drop字段xid,在新增字段xid
                         if (tconfig.reset == 'true') {
                             console.log(`drop sql:`, dropSQL);
                             console.log(`sync sql:`, syncSQL);
                             console.log('update sql:', updateSQL);
+                            console.log('modify sql:', modifySQL);
+                            console.log('add sql:', addSQL);
                         }
                     }
 
@@ -142,16 +162,13 @@ class SyncService extends Service {
                         tconfig.queryResponse = await clickhouse.query(querySQL).toPromise();
                         console.log(`query sql: ${querySQL} , response:`, JSON.stringify(tconfig.queryResponse));
                     } catch (error) {
-                        // const updateSQL = `UPDATE ${index}.bs_sync_rec t SET reset = 'false' WHERE t.index = :index and t.type = :type and t.params = :params `;
-                        // await mysql.query(updateSQL, { index: index, type: table, params: fieldName });
-                        // console.log('update sql:', updateSQL, error); // console.log('error: ', error);
                         //如果错误信息含有Missing columns，则需要drop字段xid,在新增字段xid
                         if (error.toString().includes('Missing columns:')) {
                             try {
-                                // const dropcolumnSQL = synconfig.dropcolumn.replace(/:table/g, table);
-                                // mysql.query(dropcolumnSQL);
-                                // const addcolumnSQL = synconfig.addcolumn.replace(/:table/g, table);
-                                // mysql.query(addcolumnSQL);
+                                const dropcolumnSQL = synconfig.dropcolumn.replace(/:table/g, table);
+                                const addcolumnSQL = synconfig.addcolumn.replace(/:table/g, table);
+                                mysql.query(dropcolumnSQL);
+                                mysql.query(addcolumnSQL);
                             } catch (error) {
                                 console.log(`add column sql:`, addcolumnSQL);
                             }
@@ -160,59 +177,72 @@ class SyncService extends Service {
 
                     //查询到返回值，则进行后续步骤
                     if (tconfig.queryResponse && tconfig.queryResponse.length > 0) {
-                        let { id, xid } = tconfig.queryResponse[0];
-                        xid = (xid == '0' && xid == 0) ? '10000000000000000000000000000001' : xid;
-                        console.log(`id:`, id, ` xid:`, xid);
+                        let { id } = tconfig.queryResponse[0];
+                        console.log(`id:`, id);
 
                         //第三步，查询id大于当前clickhouse表中最大值ID的所有数据，并Insert表单中
                         const insertSQL = synconfig.inclang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'id').replace(fieldType == 'number' ? /':pindex'/g : /:pindex/g, id);
                         console.log(`insert sql:`, insertSQL);
                         try {
-                            tconfig.insertResponse = await database.querying(insertSQL);
-                            // tconfig.insertResponse = await clickhouse.query(insertSQL).toPromise();
+                            tconfig.insertResponse = await database.querying(insertSQL); // tconfig.insertResponse = await clickhouse.query(insertSQL).toPromise();
                         } catch (error) {
                             //console.log(error);
                         }
                         console.log(`insert response:`, JSON.stringify(tconfig.insertResponse), '\n\r insert sql:', insertSQL);
-                        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
+                        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
 
                         //查询mysql表存在，但是click表不存在的数据，insert到clickhouse表中
                         const istlangSQL = synconfig.istlang.replace(/:table/g, table).replace(/:param_id/g, 'id').replace(fieldType == 'number' ? /':pindex'/g : /:pindex/g, id);
                         console.log(`istlang sql:`, istlangSQL);
                         try {
-                            tconfig.istlangResponse = await database.querying(istlangSQL);
-                            // tconfig.istlangResponse = await clickhouse.query(istlangSQL).toPromise();
+                            tconfig.istlangResponse = await database.querying(istlangSQL); // tconfig.istlangResponse = await clickhouse.query(istlangSQL).toPromise();
                         } catch (error) {
                             //console.log(error);
                         }
+
+                        //clickhouse去重
+                        try {
+                            tconfig.optResponse = await database.querying(optSQL);
+                        } catch (error) {
+                            //console.log(error);
+                        }
+
                         console.log(`istlang response:`, JSON.stringify(tconfig.istlangResponse), '\n\r istlang sql:', istlangSQL);
-                        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
+                        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100);
+
+                        tconfig.queryResponse = await clickhouse.query(querySQL).toPromise();
+                        let { xid } = tconfig.queryResponse[0];
+                        xid = (xid == '0' && xid == 0) ? '10000000000000000000000000000001' : xid;
+                        console.log(`xid:`, xid);
 
                         //第四步，查询xid大于当前clickhouse表中最大值xid得所有数据，删除clickhouse表中这些数据中存在这些ID值得记录,并Insert这些数据到clickhouse表单中 -- ALTER TABLE xdata.bs_seal_regist DELETE WHERE id in ('','','');
                         const deleteSQL = synconfig.dltlang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'xid').replace(/:pindex/g, xid);
                         console.log(`delete sql:`, deleteSQL);
                         try {
                             tconfig.deleteResponse = await database.querying(deleteSQL);
-                        } catch (error) {
-                            // tconfig.deleteResponse = await clickhouse.query(deleteSQL).toPromise();
+                        } catch (error) { // tconfig.deleteResponse = await clickhouse.query(deleteSQL).toPromise();
                             // console.log(error);
                         }
-                        console.log(`delete response:`, JSON.stringify(tconfig.deleteResponse), '\n\r delete sql:', deleteSQL);
                         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
 
                         const patchSQL = synconfig.inclang.replace(/:table/g, table).replace(/:dest_fields/g, ' ').replace(/:src_fields/g, '*').replace(/:param_id/g, 'xid').replace(/:pindex/g, xid);
                         console.log(`patch sql:`, patchSQL);
                         try {
                             tconfig.patchResponse = await database.querying(patchSQL);
-                        } catch (error) {
-                            // tconfig.patchResponse = await clickhouse.query(patchSQL).toPromise();
+                        } catch (error) { // tconfig.patchResponse = await clickhouse.query(patchSQL).toPromise();
                             // console.log(error);
                         }
-                        console.log(`patch response:`, JSON.stringify(tconfig.patchResponse), '\n\r patch sql:', patchSQL);
+
+                        //clickhouse去重
+                        try {
+                            tconfig.optResponse = await database.querying(optSQL);
+                        } catch (error) {
+                            //console.log(error);
+                        }
+
                         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
 
                     }
-
 
                     /**
                      *  -- 第一步，如果没有表，则DROP表并新建表并导入数据

@@ -316,6 +316,8 @@ module.exports = appInfo => {
     }
 
     config.clickhousesync = {
+        //新增或修改create_time
+        ctimelang: `alter table ${config.clickhouse.mysql.database}.:table :operate create_time timestamp default CURRENT_TIMESTAMP not null; `,
         //drop字段
         dropcolumn: `ALTER TABLE ${config.clickhouse.mysql.database}.:table drop column xid; `,
         //新增字段
@@ -323,7 +325,9 @@ module.exports = appInfo => {
         //DROP表
         droplang: `DROP TABLE IF EXISTS ${config.clickhouse.mysql.database}.:table ; `,
         //全量同步语句
-        synclang: `CREATE TABLE ${config.clickhouse.mysql.database}.:table ENGINE = MergeTree ORDER BY id AS SELECT * FROM mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table', '${config.clickhouse.mysql.user}','${config.clickhouse.mysql.password}') ; `,
+        synclang: `CREATE TABLE ${config.clickhouse.mysql.database}.:table ENGINE = ReplacingMergeTree(create_time) PARTITION BY toYYYYMM(create_time) PRIMARY KEY id ORDER BY (id) AS SELECT * FROM mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table', '${config.clickhouse.mysql.user}','${config.clickhouse.mysql.password}') ; `,
+        //去重SQL
+        optlang: `optimize table ${config.clickhouse.mysql.database}.:table FINAL;`,
         //查询增量ID/XID
         sctlang: `SELECT max(id) id, max(xid) xid FROM ${config.clickhouse.mysql.database}.:table ; `,
         //查询大于XID的所有数据集(大于本地最大XID，表示上游有更新，需要将上游更新)
