@@ -154,14 +154,10 @@ class SyncService extends Service {
                         // console.log('update sql:', updateSQL, error); // console.log('error: ', error);
                         //如果错误信息含有Missing columns，则需要drop字段xid,在新增字段xid
                         if (error.toString().includes('Missing columns:')) {
-                            const dropcolumnSQL = synconfig.dropcolumn.replace(/:table/g, table);
-                            const addcolumnSQL = synconfig.addcolumn.replace(/:table/g, table);
+                            // const dropcolumnSQL = synconfig.dropcolumn.replace(/:table/g, table);
+                            // mysql.query(dropcolumnSQL);
                             try {
-                                mysql.query(dropcolumnSQL);
-                            } catch (error) {
-                                console.log(`drop column sql:`, dropcolumnSQL);
-                            }
-                            try {
+                                const addcolumnSQL = synconfig.addcolumn.replace(/:table/g, table);
                                 mysql.query(addcolumnSQL);
                             } catch (error) {
                                 console.log(`add column sql:`, addcolumnSQL);
