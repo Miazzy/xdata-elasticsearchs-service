@@ -15,8 +15,12 @@ class SyncTaskES extends Subscription {
     // subscribe 是真正定时任务执行时被运行的函数
     async subscribe(response, tasklist = [1, 2, 3, 4]) {
         for (const i of tasklist) {
-            response = await this.ctx.service.syncservice.doEsTask('job' + i);
-            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
+            try {
+                response = await this.ctx.service.syncservice.doEsTask('job' + i);
+                Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
+            } catch (error) {
+                console.log(`SyncTaskES Error:`, error);
+            }
         }
     }
 

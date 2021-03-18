@@ -18,7 +18,7 @@ class SyncTaskCK extends Subscription {
             response = await this.ctx.service.syncservice.doCkTask(taskName);
             Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1500);
         } catch (error) {
-            console.error(`error:`, error);
+            console.error(`SyncTaskCK Error:`, error);
         }
     }
 
