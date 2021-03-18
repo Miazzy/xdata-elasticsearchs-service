@@ -12,6 +12,9 @@ class SyncService extends Service {
 
         const { ctx, app } = this;
 
+        //新增分布式锁，先上锁，在执行，避免并发问题
+        const lock = await app.redlock.lock('locks:xdata.clickhouse.service.estask:30000', 1000);
+
         try {
             const config = app.config.elasticsearch[taskName];
             //console.log(`elasticsearch config:`, JSON.stringify(config));
@@ -53,10 +56,14 @@ class SyncService extends Service {
                 //讲pindex写入数据库
                 app.esMySQL.query(updateSQL, { pindex: config.pindex, index: config.index, type: config.type, params: config.params });
             }
-            return { err: 0, code: 0, success: true, pindex: config.pindex };
+            ctx.result = { err: 0, code: 0, success: true, pindex: config.pindex };
         } catch (error) {
-            return { err: -99, code: -99, success: false, pindex: -1, message: error };
+            ctx.result = { err: -99, code: -99, success: false, pindex: -1, message: error };
         }
+
+        await app.redlock.unlock(lock);
+
+        return ctx.result;
     }
 
     /**
