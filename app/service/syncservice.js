@@ -88,7 +88,7 @@ class SyncService extends Service {
             const { clickhouse, database, mysql } = app.ck;
             const optSQL = synconfig.optlang.replace(/:table/g, table);
             Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);
-            // console.log(`table:${table}, resetFlag:${resetFlag}, fieldName:${fieldName}, pindex:${pindex}, syncTableName:${syncTableName} `);
+            console.log(`table:${table}, resetFlag:${resetFlag}, fieldName:${fieldName}, pindex:${pindex}, syncTableName:${syncTableName} , optsql: ${optSQL}`);
 
             //只执行taskName的任务
             if (table == taskName || taskName == 'all') {
@@ -204,7 +204,7 @@ class SyncService extends Service {
                         try {
                             tconfig.optResponse = await database.querying(optSQL);
                         } catch (error) {
-                            //console.log(error);
+                            console.log(`opt sql:`, error);
                         }
 
                         console.log(`istlang response:`, JSON.stringify(tconfig.istlangResponse), '\n\r istlang sql:', istlangSQL);
@@ -237,7 +237,7 @@ class SyncService extends Service {
                         try {
                             tconfig.optResponse = await database.querying(optSQL);
                         } catch (error) {
-                            //console.log(error);
+                            console.log(`opt sql:`, error);
                         }
 
                         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 0);

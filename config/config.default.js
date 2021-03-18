@@ -325,7 +325,7 @@ module.exports = appInfo => {
         //DROP表
         droplang: `DROP TABLE IF EXISTS ${config.clickhouse.mysql.database}.:table ; `,
         //全量同步语句
-        synclang: `CREATE TABLE ${config.clickhouse.mysql.database}.:table ENGINE = ReplacingMergeTree(create_time) PARTITION BY toYYYYMM(create_time) PRIMARY KEY id ORDER BY (id) AS SELECT * FROM mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table', '${config.clickhouse.mysql.user}','${config.clickhouse.mysql.password}') ; `,
+        synclang: `CREATE TABLE ${config.clickhouse.mysql.database}.:table ENGINE = ReplacingMergeTree(create_time) PARTITION BY toYear(create_time) PRIMARY KEY id ORDER BY (id) AS SELECT * FROM mysql('${config.clickhouse.mysql.host}:${config.clickhouse.mysql.port}', '${config.clickhouse.mysql.database}', ':table', '${config.clickhouse.mysql.user}','${config.clickhouse.mysql.password}') ; `,
         //去重SQL
         optlang: `optimize table ${config.clickhouse.mysql.database}.:table FINAL;`,
         //查询增量ID/XID
