@@ -88,7 +88,7 @@ module.exports = appInfo => {
             redis: {
                 driver: redisStore,
                 host: '172.18.254.95',
-                port: 6381,
+                port: 36379,
                 password: '',
                 db: 0,
                 ttl: 600,
@@ -126,8 +126,8 @@ module.exports = appInfo => {
     // mysql数据库连接配置
     config.mysql = { // database configuration
         client: {
-            host: '172.18.254.96',
-            port: '4000',
+            host: '172.18.254.95',
+            port: '39090',
             user: 'zhaoziyun',
             password: 'ziyequma',
             database: 'xdata',
@@ -181,8 +181,8 @@ module.exports = appInfo => {
 
     config.redis = {
         client: { // single
-            port: 6381, // Redis port
             host: '172.18.254.95', // Redis host
+            port: 36379, // Redis port
             password: '',
             db: 0,
         },
@@ -264,7 +264,7 @@ module.exports = appInfo => {
         serviceName: 'xdata-clickhouse-service',
         //上游MySQL服务
         mysql: {
-            host: 'api.yunwisdom.club',
+            host: '172.18.254.95',
             port: '39090',
             user: 'zhaoziyun',
             password: 'ziyequma',
@@ -305,7 +305,7 @@ module.exports = appInfo => {
         client: {
             nodes: [{
                 host: '172.18.254.95',
-                port: 6381,
+                port: 36379,
             }, ]
         },
         driftFactor: 0.01, // time in ms // the expected clock drift; for more details
