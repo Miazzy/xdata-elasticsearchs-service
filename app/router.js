@@ -50,4 +50,7 @@ module.exports = app => {
     // clickhouse 同步
     router.get('/api/ck/sync', controller.cksync.index);
 
+    // clickhouse 同步
+    router.post('/api/kafka/:topic/:key/:content', controller.kafka.index);
+
 };

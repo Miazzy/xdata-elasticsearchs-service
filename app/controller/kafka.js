@@ -7,14 +7,19 @@ const Controller = require('egg').Controller;
 class KafkaController extends Controller {
 
     async index() {
-        await this.ctx.kafka.sendMessage({
-            topic: 'someTopic', // Specify topics in the Kafka directory
-            key: 'someKey', // Specify consumer for the corresponding key under topic
-            messages: JSON.stringify({
-                username: 'JohnApache',
-                userId: 10001,
-                gender: 0
-            })
+
+        const { ctx } = this;
+
+        const topic = ctx.query.topic || ctx.params.topic || 'message'; // 获取传入的Topic值
+        const key = ctx.query.key || ctx.params.key || 'task'; // 获取传入的Key值
+        const content = ctx.query.content || ctx.params.content || {};
+
+        await ctx.kafka.sendMessage({
+            topic: topic,
+            key: key,
+            messages: JSON.stringify(content),
         });
     }
 }
+
+module.exports = KafkaController;

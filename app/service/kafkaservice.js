@@ -5,34 +5,30 @@ let count = 0;
 class KafkaService extends Service {
 
     /**
-     * @description 同步ES数据
+     * @description 推送Kafka消息
      * @param {*} taskName 
      * @returns 
      */
     async doTask(taskName = 'job1') {
 
         const { ctx, app } = this;
-
         console.log(`message task : ${taskName} start ... `);
+
         try {
             await ctx.kafka.sendMessage({
-                topic: 'message', // Specify topics in the Kafka directory
-                key: 'task', // Specify consumer for the corresponding key under topic
+                topic: 'message',
+                key: 'task',
                 messages: JSON.stringify({
-                    username: 'JohnApache',
                     userId: count++,
                     taskName,
-                    gender: 0
                 })
             });
             await ctx.kafka.sendMessage({
-                topic: 'message', // Specify topics in the Kafka directory
-                key: 'work', // Specify consumer for the corresponding key under topic
+                topic: 'message',
+                key: 'work',
                 messages: JSON.stringify({
-                    username: 'Worker',
                     userId: count++,
                     taskName,
-                    gender: 0
                 })
             });
             console.log(`message task : ${taskName} count: ${count} end ... `);
