@@ -3,7 +3,7 @@ const Subscription = require('egg').Subscription;
 class WorkSubscription extends Subscription {
     async subscribe(message) {
         const { app } = this;
-        const lock = await app.redlock.lock('locks:xdata.kafka.service.message.work', 10);
+        const lock = await app.redlock.lock('locks:xdata.kafka.service.message.work', 1);
 
         try {
             const { value, topic, key } = message;
