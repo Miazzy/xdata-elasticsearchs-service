@@ -166,25 +166,27 @@ module.exports = app => {
                 });
             }
 
-            app.kafka = new Kafka(app.config.kafka.config);
+            app.kafkajs = new Kafka(app.config.kafka.config);
 
-            app.kafka.esproducer = app.kafka.producer();
-            app.kafka.esconsumer = app.kafka.consumer({ groupId: 'group' });
+            app.kafkajs.esproducer = app.kafkajs.producer();
+            app.kafkajs.esconsumer = app.kafkajs.consumer({ groupId: 'group' });
 
-            await app.kafka.esconsumer.connect();
-            await app.kafka.esproducer.connect(); //生产者生产消息，请在controller里面编写
-            await app.kafka.esconsumer.subscribe({ topic: topic, fromBeginning: true });
-            await app.kafka.esconsumer.run({
+            await app.kafkajs.esconsumer.connect();
+            await app.kafkajs.esproducer.connect(); //生产者生产消息，请在controller里面编写
+            await app.kafkajs.esconsumer.subscribe({ topic: topic, fromBeginning: true });
+            await app.kafkajs.esconsumer.run({
                 eachMessage: async({ topic, partition, message }) => {
-                    console.log(`topic name: ${topic} , partition: ${partition}, offset: ${message.offset} ,message: `, message.value);
+                    console.log(`topic name: ${topic} , partition: ${partition}, offset: ${message.offset} ,message: `, message.value.toString());
                     //根据获取的消息分发至相应的处理器
                     //持久化到数据库中,便于后期查询消息，消费情况
                 },
             })
-            await app.kafka.esproducer.send({
+            await app.kafkajs.esproducer.send({
                 topic: topic,
                 messages: [
-                    { value: 'Hello KafkaJS user!' },
+                    { value: 'Hello KafkaJS user one!' },
+                    { value: 'Hello KafkaJS user two!' },
+                    { value: 'Hello KafkaJS user three!' },
                 ],
             });
         }

@@ -332,7 +332,7 @@ module.exports = appInfo => {
     }
 
     exports.kafkaNode = {
-        kafkaHost: '172.18.254.95:9092', // kafka connect host
+        kafkaHost: ["172.18.254.95:9092", "172.18.254.95:9093", "172.18.254.95:9094"].toString(), // kafka connect host
         clientOption: {}, // KafkaClient option, more documentation please visit kafka-node
         consumerOption: [{
             groupId: 'group1', // consumerGroup's groupId
@@ -343,8 +343,7 @@ module.exports = appInfo => {
                 fetchMaxBytes: 1024 * 1024,
             }, // relevant configuration for each consumer group, more documentation please visit kafka-node
         }],
-        // HighLevelProducer option, more documentation please visit kafka-node
-        producerOption: {
+        producerOption: { // HighLevelProducer option, more documentation please visit kafka-node
             requireAcks: 1,
             ackTimeoutMs: 100,
             partitionerType: 2,
@@ -355,8 +354,6 @@ module.exports = appInfo => {
             partition: 0,
             attributes: 0, // send message option
         },
-        // NewConfig 
-        // baseConsumersDir: './app/kafka', // support read consumers files base dir
     };
 
     //clickhouse同步配置

@@ -7,5 +7,4 @@ class WorkSubscription extends Subscription {
     }
 }
 
-
 module.exports = WorkSubscription;

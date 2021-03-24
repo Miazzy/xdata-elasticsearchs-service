@@ -7,5 +7,4 @@ class TaskSubscription extends Subscription {
     }
 }
 
-
 module.exports = TaskSubscription;
