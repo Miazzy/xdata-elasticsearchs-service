@@ -174,3 +174,5 @@ networks:
   elastic:
 ```
 将上述脚本保存为docker-compose.yml,最好在一个新的目录中，然后执行`docker-compose -f docker-compose.yml up -d`即可，第一次要拉取docker镜像等待时间较长。如果未安装docker及docker-compose请及时安装后执行上述操作。
+
+### Kafka 提供分布式日志 和 异步消息功能
