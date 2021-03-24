@@ -2,8 +2,8 @@ const Subscription = require('egg').Subscription;
 
 class TaskSubscription extends Subscription {
     async subscribe(message) {
-        //新增分布式锁，先上锁，在执行，避免并发问题
-        const lock = await app.redlock.lock('locks:xdata.kafka.service.message.task', 300);
+        const { app } = this;
+        const lock = await app.redlock.lock('locks:xdata.kafka.service.message.task', 10);
 
         try {
             const { value, topic, key } = message;

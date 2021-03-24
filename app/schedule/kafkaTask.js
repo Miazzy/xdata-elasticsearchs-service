@@ -7,7 +7,7 @@ class KafkaTask extends Subscription {
     static get schedule() {
         return {
             //cron: '* * * * * *',
-            interval: '100s', // 1 分钟间隔
+            interval: '3s', // 1 分钟间隔
             type: 'worker', // 指定所有的 worker 都需要执行
         };
     }
