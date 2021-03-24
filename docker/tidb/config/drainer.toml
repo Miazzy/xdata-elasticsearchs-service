@@ -1,0 +1,20 @@
+detect-interval = 10
+data-dir = "data.drainer"
+pd-urls = "http://127.0.0.1:2379"
+compressor = ""
+
+[syncer]
+txn-batch = 20
+worker-count = 16
+disable-dispatch = false
+safe-mode = false
+db-type = "tidb"
+ignore-schemas = "INFORMATION_SCHEMA,PERFORMANCE_SCHEMA,mysql,tidb_binlog_slave,tidb_binlog"
+
+[syncer.to]
+host = "172.18.1.50"
+user = "zhaoziyun"
+password = "ziyequma"
+port = 4000
+
+[syncer.to.checkpoint]

@@ -1,0 +1,66 @@
+version: '2.1'
+
+services:
+
+  pd3:
+    image: pingcap/pd:latest
+    ports:
+      - "23790:2379"
+      - "23800:2380"
+    volumes:
+      - ./config/pd.toml:/pd.toml:ro
+      - ./data:/data
+      - ./logs:/logs
+    command:
+      - --name=pd3
+      - --client-urls=http://0.0.0.0:2379
+      - --peer-urls=http://0.0.0.0:2380
+      - --advertise-client-urls=http://172.18.1.104:23790
+      - --advertise-peer-urls=http://172.18.1.104:23800
+      - --initial-cluster=pd0=http://172.18.254.96:23800,pd1=http://172.18.254.96:23801,pd2=http://172.18.254.96:23802,pd3=http://172.18.1.104:23800,pd4=http://172.18.1.104:23801,pd5=http://172.18.1.104:23802
+      - --data-dir=/data/pd3
+      - --config=/pd.toml
+      - --log-file=/logs/pd3.log
+    restart: on-failure
+
+  pd4:
+    image: pingcap/pd:latest
+    ports:
+      - "23791:2379"
+      - "23801:2380"
+    volumes:
+      - ./config/pd.toml:/pd.toml:ro
+      - ./data:/data
+      - ./logs:/logs
+    command:
+      - --name=pd4
+      - --client-urls=http://0.0.0.0:2379
+      - --peer-urls=http://0.0.0.0:2380
+      - --advertise-client-urls=http://172.18.1.104:23791
+      - --advertise-peer-urls=http://172.18.1.104:23801
+      - --initial-cluster=pd0=http://172.18.254.96:23800,pd1=http://172.18.254.96:23801,pd2=http://172.18.254.96:23802,pd3=http://172.18.1.104:23800,pd4=http://172.18.1.104:23801,pd5=http://172.18.1.104:23802
+      - --data-dir=/data/pd4
+      - --config=/pd.toml
+      - --log-file=/logs/pd4.log
+    restart: on-failure
+
+  pd5:
+    image: pingcap/pd:latest
+    ports:
+      - "23792:2379"
+      - "23802:2380"
+    volumes:
+      - ./config/pd.toml:/pd.toml:ro
+      - ./data:/data
+      - ./logs:/logs
+    command:
+      - --name=pd5
+      - --client-urls=http://0.0.0.0:2379
+      - --peer-urls=http://0.0.0.0:2380
+      - --advertise-client-urls=http://172.18.1.104:23792
+      - --advertise-peer-urls=http://172.18.1.104:23802
+      - --initial-cluster=pd0=http://172.18.254.96:23800,pd1=http://172.18.254.96:23801,pd2=http://172.18.254.96:23802,pd3=http://172.18.1.104:23800,pd4=http://172.18.1.104:23801,pd5=http://172.18.1.104:23802
+      - --data-dir=/data/pd5
+      - --config=/pd.toml
+      - --log-file=/logs/pd5.log
+    restart: on-failure

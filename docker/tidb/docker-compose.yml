@@ -1,0 +1,407 @@
+version: '2.1'
+
+services:
+
+  pd0:
+    image: pingcap/pd:latest
+    ports:
+      - "23790:2379"
+      - "23800:2380"
+    volumes:
+      - ./config/pd.toml:/pd.toml:ro
+      - ./data:/data
+      - ./logs:/logs
+    command:
+      - --name=pd0
+      - --client-urls=http://0.0.0.0:2379
+      - --peer-urls=http://0.0.0.0:2380
+      - --advertise-client-urls=http://172.18.254.96:23790
+      - --advertise-peer-urls=http://172.18.254.96:23800
+      - --initial-cluster=pd0=http://172.18.254.96:23800,pd1=http://172.18.254.96:23801,pd2=http://172.18.254.96:23802,pd3=http://172.18.1.104:23800,pd4=http://172.18.1.104:23801,pd5=http://172.18.1.104:23802
+      - --data-dir=/data/pd0
+      - --config=/pd.toml
+      - --log-file=/logs/pd0.log
+    restart: on-failure
+
+  pd1:
+    image: pingcap/pd:latest
+    ports:
+      - "23791:2379"
+      - "23801:2380"
+    volumes:
+      - ./config/pd.toml:/pd.toml:ro
+      - ./data:/data
+      - ./logs:/logs
+    command:
+      - --name=pd1
+      - --client-urls=http://0.0.0.0:2379
+      - --peer-urls=http://0.0.0.0:2380
+      - --advertise-client-urls=http://172.18.254.96:23791
+      - --advertise-peer-urls=http://172.18.254.96:23801
+      - --initial-cluster=pd0=http://172.18.254.96:23800,pd1=http://172.18.254.96:23801,pd2=http://172.18.254.96:23802,pd3=http://172.18.1.104:23800,pd4=http://172.18.1.104:23801,pd5=http://172.18.1.104:23802
+      - --data-dir=/data/pd1
+      - --config=/pd.toml
+      - --log-file=/logs/pd1.log
+    restart: on-failure
+
+  pd2:
+    image: pingcap/pd:latest
+    ports:
+      - "23792:2379"
+      - "23802:2380"
+    volumes:
+      - ./config/pd.toml:/pd.toml:ro
+      - ./data:/data
+      - ./logs:/logs
+    command:
+      - --name=pd2
+      - --client-urls=http://0.0.0.0:2379
+      - --peer-urls=http://0.0.0.0:2380
+      - --advertise-client-urls=http://172.18.254.96:23792
+      - --advertise-peer-urls=http://172.18.254.96:23802
+      - --initial-cluster=pd0=http://172.18.254.96:23800,pd1=http://172.18.254.96:23801,pd2=http://172.18.254.96:23802,pd3=http://172.18.1.104:23800,pd4=http://172.18.1.104:23801,pd5=http://172.18.1.104:23802
+      - --data-dir=/data/pd2
+      - --config=/pd.toml
+      - --log-file=/logs/pd2.log
+    restart: on-failure
+
+  tikv0:
+    image: pingcap/tikv:latest
+    ports:
+      - "20160:20160"
+    volumes:
+      - ./config/tikv.toml:/tikv.toml:ro
+      - ./data:/data
+      - ./logs:/logs
+    command:
+      - --addr=0.0.0.0:20160
+      - --advertise-addr=172.18.254.96:20160
+      - --data-dir=/data/tikv0
+      - --pd=172.18.254.96:23790,172.18.254.96:23791,172.18.254.96:23792,172.18.1.104:23790,172.18.1.104:23791,172.18.1.104:23792
+      - --config=/tikv.toml
+      - --log-file=/logs/tikv0.log
+    depends_on:
+      - "pd0"
+      - "pd1"
+      - "pd2"
+    restart: on-failure
+
+  tikv1:
+    image: pingcap/tikv:latest
+    ports:
+      - "20161:20160"
+    volumes:
+      - ./config/tikv.toml:/tikv.toml:ro
+      - ./data:/data
+      - ./logs:/logs
+    command:
+      - --addr=0.0.0.0:20160
+      - --advertise-addr=172.18.254.96:20161
+      - --data-dir=/data/tikv1
+      - --pd=172.18.254.96:23790,172.18.254.96:23791,172.18.254.96:23792,172.18.1.104:23790,172.18.1.104:23791,172.18.1.104:23792
+      - --config=/tikv.toml
+      - --log-file=/logs/tikv1.log
+    depends_on:
+      - "pd0"
+      - "pd1"
+      - "pd2"
+    restart: on-failure
+
+  tikv2:
+    image: pingcap/tikv:latest
+    ports:
+      - "20162:20160"
+    volumes:
+      - ./config/tikv.toml:/tikv.toml:ro
+      - ./data:/data
+      - ./logs:/logs
+    command:
+      - --addr=0.0.0.0:20160
+      - --advertise-addr=172.18.254.96:20162
+      - --data-dir=/data/tikv2
+      - --pd=172.18.254.96:23790,172.18.254.96:23791,172.18.254.96:23792,172.18.1.104:23790,172.18.1.104:23791,172.18.1.104:23792
+      - --config=/tikv.toml
+      - --log-file=/logs/tikv2.log
+    depends_on:
+      - "pd0"
+      - "pd1"
+      - "pd2"
+    restart: on-failure
+
+  tikv3:
+    image: pingcap/tikv:latest
+    ports:
+      - "20163:20160"
+    volumes:
+      - ./config/tikv.toml:/tikv.toml:ro
+      - ./data:/data
+      - ./logs:/logs
+    command:
+      - --addr=0.0.0.0:20160
+      - --advertise-addr=172.18.254.96:20163
+      - --data-dir=/data/tikv3
+      - --pd=172.18.254.96:23790,172.18.254.96:23791,172.18.254.96:23792,172.18.1.104:23790,172.18.1.104:23791,172.18.1.104:23792
+      - --config=/tikv.toml
+      - --log-file=/logs/tikv3.log
+    depends_on:
+      - "pd0"
+      - "pd1"
+      - "pd2"
+    restart: on-failure
+
+  tikv4:
+    image: pingcap/tikv:latest
+    ports:
+      - "20164:20160"
+    volumes:
+      - ./config/tikv.toml:/tikv.toml:ro
+      - ./data:/data
+      - ./logs:/logs
+    command:
+      - --addr=0.0.0.0:20160
+      - --advertise-addr=172.18.254.96:20164
+      - --data-dir=/data/tikv4
+      - --pd=172.18.254.96:23790,172.18.254.96:23791,172.18.254.96:23792,172.18.1.104:23790,172.18.1.104:23791,172.18.1.104:23792
+      - --config=/tikv.toml
+      - --log-file=/logs/tikv4.log
+    depends_on:
+      - "pd0"
+      - "pd1"
+      - "pd2"
+    restart: on-failure
+
+  tikv5:
+    image: pingcap/tikv:latest
+    ports:
+      - "20165:20160"
+    volumes:
+      - ./config/tikv.toml:/tikv.toml:ro
+      - ./data:/data
+      - ./logs:/logs
+    command:
+      - --addr=0.0.0.0:20160
+      - --advertise-addr=172.18.254.96:20165
+      - --data-dir=/data/tikv5
+      - --pd=172.18.254.96:23790,172.18.254.96:23791,172.18.254.96:23792,172.18.1.104:23790,172.18.1.104:23791,172.18.1.104:23792
+      - --config=/tikv.toml
+      - --log-file=/logs/tikv5.log
+    depends_on:
+      - "pd0"
+      - "pd1"
+      - "pd2"
+    restart: on-failure
+
+  tikv6:
+    image: pingcap/tikv:latest
+    ports:
+      - "20166:20160"
+    volumes:
+      - ./config/tikv.toml:/tikv.toml:ro
+      - ./data:/data
+      - ./logs:/logs
+    command:
+      - --addr=0.0.0.0:20160
+      - --advertise-addr=172.18.254.96:20166
+      - --data-dir=/data/tikv6
+      - --pd=172.18.254.96:23790,172.18.254.96:23791,172.18.254.96:23792,172.18.1.104:23790,172.18.1.104:23791,172.18.1.104:23792
+      - --config=/tikv.toml
+      - --log-file=/logs/tikv6.log
+    depends_on:
+      - "pd0"
+      - "pd1"
+      - "pd2"
+    restart: on-failure
+
+  tikv7:
+    image: pingcap/tikv:latest
+    ports:
+      - "20167:20160"
+    volumes:
+      - ./config/tikv.toml:/tikv.toml:ro
+      - ./data:/data
+      - ./logs:/logs
+    command:
+      - --addr=0.0.0.0:20160
+      - --advertise-addr=172.18.254.96:20167
+      - --data-dir=/data/tikv7
+      - --pd=172.18.254.96:23790,172.18.254.96:23791,172.18.254.96:23792,172.18.1.104:23790,172.18.1.104:23791,172.18.1.104:23792
+      - --config=/tikv.toml
+      - --log-file=/logs/tikv7.log
+    depends_on:
+      - "pd0"
+      - "pd1"
+      - "pd2"
+    restart: on-failure
+
+  tikv8:
+    image: pingcap/tikv:latest
+    ports:
+      - "20168:20160"
+    volumes:
+      - ./config/tikv.toml:/tikv.toml:ro
+      - ./data:/data
+      - ./logs:/logs
+    command:
+      - --addr=0.0.0.0:20160
+      - --advertise-addr=172.18.254.96:20168
+      - --data-dir=/data/tikv8
+      - --pd=172.18.254.96:23790,172.18.254.96:23791,172.18.254.96:23792,172.18.1.104:23790,172.18.1.104:23791,172.18.1.104:23792
+      - --config=/tikv.toml
+      - --log-file=/logs/tikv8.log
+    depends_on:
+      - "pd0"
+      - "pd1"
+      - "pd2"
+    restart: on-failure
+
+  tidb:
+    image: pingcap/tidb:latest
+    ports:
+      - "4000:4000"
+      - "10080:10080"
+    volumes:
+      - ./config/tidb.toml:/tidb.toml:ro
+      - ./logs:/logs
+    command:
+      - --store=tikv
+      - --path=172.18.254.96:23790,172.18.254.96:23791,172.18.254.96:23792,172.18.1.104:23790,172.18.1.104:23791,172.18.1.104:23792
+      - --config=/tidb.toml
+      - --log-file=/logs/tidb.log
+      - --advertise-address=tidb
+    depends_on:
+      - "tikv0"
+      - "tikv1"
+      - "tikv2"
+      - "tikv3"
+      - "tikv4"
+      - "tikv5"
+      - "tikv6"
+      - "tikv7"
+      - "tikv8"
+    restart: on-failure
+
+  tidb1:
+    image: pingcap/tidb:latest
+    ports:
+      - "4001:4000"
+      - "10081:10080"
+    volumes:
+      - ./config/tidb.toml:/tidb.toml:ro
+      - ./logs:/logs
+    command:
+      - --store=tikv
+      - --path=172.18.254.96:23790,172.18.254.96:23791,172.18.254.96:23792,172.18.1.104:23790,172.18.1.104:23791,172.18.1.104:23792
+      - --config=/tidb.toml
+      - --log-file=/logs/tidb.log
+      - --advertise-address=tidb
+    depends_on:
+      - "tikv0"
+      - "tikv1"
+      - "tikv2"
+      - "tikv3"
+      - "tikv4"
+      - "tikv5"
+      - "tikv6"
+      - "tikv7"
+      - "tikv8"
+    restart: on-failure
+
+  tidb2:
+    image: pingcap/tidb:latest
+    ports:
+      - "4002:4000"
+      - "10082:10080"
+    volumes:
+      - ./config/tidb.toml:/tidb.toml:ro
+      - ./logs:/logs
+    command:
+      - --store=tikv
+      - --path=172.18.254.96:23790,172.18.254.96:23791,172.18.254.96:23792,172.18.1.104:23790,172.18.1.104:23791,172.18.1.104:23792
+      - --config=/tidb.toml
+      - --log-file=/logs/tidb.log
+      - --advertise-address=tidb
+    depends_on:
+      - "tikv0"
+      - "tikv1"
+      - "tikv2"
+      - "tikv3"
+      - "tikv4"
+      - "tikv5"
+      - "tikv6"
+      - "tikv7"
+      - "tikv8"
+    restart: on-failure
+
+  tidb3:
+    image: pingcap/tidb:latest
+    ports:
+      - "4003:4000"
+      - "10083:10080"
+    volumes:
+      - ./config/tidb.toml:/tidb.toml:ro
+      - ./logs:/logs
+    command:
+      - --store=tikv
+      - --path=172.18.254.96:23790,172.18.254.96:23791,172.18.254.96:23792,172.18.1.104:23790,172.18.1.104:23791,172.18.1.104:23792
+      - --config=/tidb.toml
+      - --log-file=/logs/tidb.log
+      - --advertise-address=tidb
+    depends_on:
+      - "tikv0"
+      - "tikv1"
+      - "tikv2"
+      - "tikv3"
+      - "tikv4"
+      - "tikv5"
+      - "tikv6"
+      - "tikv7"
+      - "tikv8"
+    restart: on-failure
+
+  tispark-master:
+    image: pingcap/tispark:latest
+    command:
+      - /opt/spark/sbin/start-master.sh
+    volumes:
+      - ./config/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
+    environment:
+      SPARK_MASTER_PORT: 7077
+      SPARK_MASTER_WEBUI_PORT: 8080
+    ports:
+      - "7077:7077"
+      - "8080:8080"
+    depends_on:
+      - "tikv0"
+      - "tikv1"
+      - "tikv2"
+      - "tikv3"
+      - "tikv4"
+      - "tikv5"
+      - "tikv6"
+      - "tikv7"
+      - "tikv8"
+    restart: on-failure
+  tispark-slave0:
+    image: pingcap/tispark:latest
+    command:
+      - /opt/spark/sbin/start-slave.sh
+      - spark://tispark-master:7077
+    volumes:
+      - ./config/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
+    environment:
+      SPARK_WORKER_WEBUI_PORT: 38081
+    ports:
+      - "38081:38081"
+    depends_on:
+      - tispark-master
+    restart: on-failure
+
+  tidb-vision:
+    image: pingcap/tidb-vision:latest
+    environment:
+      PD_ENDPOINT: pd0:2379
+    ports:
+      - "8010:8010"
+    restart: on-failure
+
+
