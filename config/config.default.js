@@ -301,6 +301,7 @@ module.exports = appInfo => {
         ttl: 10, // 锁的超时时间, 单位: s
     }
 
+    //Redis分布式锁配置
     config.redlock = {
         client: {
             nodes: [{
@@ -315,6 +316,20 @@ module.exports = appInfo => {
         useAgent: false,
     }
 
+    //kafka连接配置
+    config.kafka = {
+        status: true,
+        register: true,
+        clientId: "app", //默认ClientID
+        topic: 'topic', //默认Topic
+        brokers: ["kafka1:9092"], //默认连接地址
+        logger: console,
+        serverList: ['172.18.1.50:8848', '172.18.1.50:8849', '172.18.1.50:8850'], // replace to real nacos serverList
+        namespace: 'public',
+        serviceName: 'xdata-kafka-service',
+    }
+
+    //clickhouse同步配置
     config.clickhousesync = {
         //新增或修改create_time
         ctimelang: `alter table ${config.clickhouse.mysql.database}.:table :operate create_time timestamp default CURRENT_TIMESTAMP not null; `,

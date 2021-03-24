@@ -7,7 +7,8 @@ const rds = require('ali-rds');
 const elasticsearch = require('elasticsearch');
 const base64Config = require('./config/base64.config');
 const { ClickHouse } = require('clickhouse');
-const ClickHouses = require('@apla/clickhouse')
+const ClickHouses = require('@apla/clickhouse');
+const { JSConsumer, JSProducer } = require("sinek")
 
 base64Config.init();
 
@@ -87,6 +88,7 @@ module.exports = app => {
 
     // 开始前执行
     app.beforeStart(async() => {
+
         // 注册 sentinel limit 限流服务
         if (app.config.sentinelLimit.status) {
             console.log('egg service start & load flow rules ... ');
@@ -100,6 +102,7 @@ module.exports = app => {
                 console.log(Constants.ROOT.toString());
             }
         }
+
         // 启用 elasticsearch 查询、同步等 服务
         if (app.config.elasticsearch.status) {
 
@@ -143,6 +146,41 @@ module.exports = app => {
             app.ck.database = new ClickHouses(app.config.clickhouse.clickhouse);
             app.ck.mysql = createMySQLClient(app.config.clickhouse.mysql, app);
             // console.log(`clickhouse config:`, app.config.clickhouse.clickhouse);
+
+        }
+
+        // 启用 clickhouse 查询、同步等 服务
+        if (app.config.kafka.status) {
+
+            console.log('egg service start & register kafka message rules ... ');
+            // NACOS中注册 clickhouse 服务
+            if (app.config.kafka.register) {
+                const client = new nacos.NacosNamingClient(app.config.kafka);
+                await client.ready();
+                await client.registerInstance(app.config.kafka.serviceName, {
+                    ip: getIpAddress(),
+                    port: app.options.port || 8001,
+                });
+            }
+
+            app.kafka = {};
+            app.kafka.producer = new JSProducer(app.config.kafka);
+            app.kafka.consumer = new JSConsumer(app.config.kafka.topic, app.config.kafka);
+
+            await app.kafka.consumer.connect();
+            await app.kafka.producer.connect(); //生产者生产消息，请在controller里面编写
+
+            consumer.consume(async(messages) => {
+
+                for (const message of messages) {
+                    console.log(`topic name: ${app.config.kafka.topic} , message: `, message);
+
+                    //根据获取的消息分发至相应的处理器
+
+                    //持久化到数据库中
+
+                };
+            });
 
         }
 
