@@ -53,6 +53,7 @@
         "pg-hstore": "^2.3.3",
         "read-excel-file": "^4.0.7",
         "sequelize": "^6.3.5",
+        "sinek": "^10.0.0-alpha.0",
         "sql2es": "^0.0.6",
         "superagent": "^6.1.0",
         "tedious": "^9.2.1",
