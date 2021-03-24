@@ -318,16 +318,46 @@ module.exports = appInfo => {
 
     //kafka连接配置
     config.kafka = {
-        status: true,
-        register: true,
-        clientId: "app", //默认ClientID
-        topic: 'topic', //默认Topic
-        brokers: ["kafka1:9092"], //默认连接地址
+        status: false,
+        register: false,
         logger: console,
         serverList: ['172.18.1.50:8848', '172.18.1.50:8849', '172.18.1.50:8850'], // replace to real nacos serverList
         namespace: 'public',
         serviceName: 'xdata-kafka-service',
+        topic: 'topic-now', //默认Topic
+        config: {
+            clientId: "app", //默认ClientID
+            brokers: ["172.18.254.95:9092", "172.18.254.95:9093", "172.18.254.95:9094"], //默认连接地址
+        },
     }
+
+    exports.kafkaNode = {
+        kafkaHost: '172.18.254.95:9092', // kafka connect host
+        clientOption: {}, // KafkaClient option, more documentation please visit kafka-node
+        consumerOption: [{
+            groupId: 'group1', // consumerGroup's groupId
+            topics: ['message'], // topics under the same consumer group 
+            options: {
+                fetchMaxWaitMs: 100,
+                fetchMinBytes: 1,
+                fetchMaxBytes: 1024 * 1024,
+            }, // relevant configuration for each consumer group, more documentation please visit kafka-node
+        }],
+        // HighLevelProducer option, more documentation please visit kafka-node
+        producerOption: {
+            requireAcks: 1,
+            ackTimeoutMs: 100,
+            partitionerType: 2,
+            autoCreateTopic: true, // Whether to turn on automatic topic creation. default true
+            topics: ['message'], // Topics that all consumers need to consume
+        },
+        messageOption: {
+            partition: 0,
+            attributes: 0, // send message option
+        },
+        // NewConfig 
+        // baseConsumersDir: './app/kafka', // support read consumers files base dir
+    };
 
     //clickhouse同步配置
     config.clickhousesync = {

@@ -19,6 +19,7 @@ import 'egg-cache';
 import 'egg-mysql';
 import 'egg-redlock';
 import 'egg-redis';
+import 'egg-kafka-node';
 import 'egg-rate-limiters';
 import { EggPluginItem } from 'egg';
 declare module 'egg' {
@@ -46,6 +47,7 @@ declare module 'egg' {
     httpProxy?: EggPluginItem;
     redis?: EggPluginItem;
     nacos?: EggPluginItem;
+    kafkaNode?: EggPluginItem;
     ratelimiter?: EggPluginItem;
     eggEtcd?: EggPluginItem;
   }

@@ -60,6 +60,11 @@ module.exports = {
         package: 'egg-nacos',
     },
 
+    kafkaNode: {
+        enable: true,
+        package: 'egg-kafka-node',
+    },
+
     ratelimiter: {
         enable: true,
         package: 'egg-rate-limiters',

@@ -8,7 +8,8 @@ const elasticsearch = require('elasticsearch');
 const base64Config = require('./config/base64.config');
 const { ClickHouse } = require('clickhouse');
 const ClickHouses = require('@apla/clickhouse');
-const { JSConsumer, JSProducer } = require("sinek")
+const { JSConsumer, JSProducer } = require("sinek");
+const { Kafka } = require('kafkajs')
 
 base64Config.init();
 
@@ -152,6 +153,8 @@ module.exports = app => {
         // 启用 clickhouse 查询、同步等 服务
         if (app.config.kafka.status) {
 
+            const topic = app.config.kafka.topic;
+
             console.log('egg service start & register kafka message rules ... ');
             // NACOS中注册 clickhouse 服务
             if (app.config.kafka.register) {
@@ -163,25 +166,27 @@ module.exports = app => {
                 });
             }
 
-            app.kafka = {};
-            app.kafka.producer = new JSProducer(app.config.kafka);
-            app.kafka.consumer = new JSConsumer(app.config.kafka.topic, app.config.kafka);
+            app.kafka = new Kafka(app.config.kafka.config);
 
-            await app.kafka.consumer.connect();
-            await app.kafka.producer.connect(); //生产者生产消息，请在controller里面编写
+            app.kafka.esproducer = app.kafka.producer();
+            app.kafka.esconsumer = app.kafka.consumer({ groupId: 'group' });
 
-            consumer.consume(async(messages) => {
-
-                for (const message of messages) {
-                    console.log(`topic name: ${app.config.kafka.topic} , message: `, message);
-
+            await app.kafka.esconsumer.connect();
+            await app.kafka.esproducer.connect(); //生产者生产消息，请在controller里面编写
+            await app.kafka.esconsumer.subscribe({ topic: topic, fromBeginning: true });
+            await app.kafka.esconsumer.run({
+                eachMessage: async({ topic, partition, message }) => {
+                    console.log(`topic name: ${topic} , partition: ${partition}, offset: ${message.offset} ,message: `, message.value);
                     //根据获取的消息分发至相应的处理器
-
                     //持久化到数据库中,便于后期查询消息，消费情况
-
-                };
+                },
+            })
+            await app.kafka.esproducer.send({
+                topic: topic,
+                messages: [
+                    { value: 'Hello KafkaJS user!' },
+                ],
             });
-
         }
 
     });
