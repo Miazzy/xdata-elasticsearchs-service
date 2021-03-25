@@ -40,6 +40,7 @@
         "egg-redlock": "^1.0.0",
         "egg-redlock-plugin": "^1.0.0",
         "egg-scripts": "^2.11.0",
+        "egg-sofa-rpc": "^3.0.0",
         "elasql": "^1.0.3",
         "elasticsearchclient": "^0.5.3",
         "etcd3": "^1.1.0",
