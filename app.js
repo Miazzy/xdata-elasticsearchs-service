@@ -9,7 +9,10 @@ const base64Config = require('./config/base64.config');
 const { ClickHouse } = require('clickhouse');
 const ClickHouses = require('@apla/clickhouse');
 const { JSConsumer, JSProducer } = require("sinek");
-const { Kafka } = require('kafkajs')
+const { Kafka } = require('kafkajs');
+const { RpcServer } = require('sofa-rpc-node').server;
+const { RpcClient } = require('sofa-rpc-node').client;
+const { ZookeeperRegistry } = require('sofa-rpc-node').registry;
 
 base64Config.init();
 
@@ -120,8 +123,6 @@ module.exports = app => {
 
             console.log(`config:`, app.config.elasticsearch.es);
 
-            debugger
-
             //注册es同步相关模块
             app.esSearch = new elasticsearch.Client(app.config.elasticsearch.es);
             app.esMySQL = createMySQLClient(app.config.elasticsearch.mysql, app);
@@ -150,7 +151,7 @@ module.exports = app => {
 
         }
 
-        // 启用 clickhouse 查询、同步等 服务
+        // 启用 kafka 查询、同步等 服务
         if (app.config.kafka.status) {
 
             const topic = app.config.kafka.topic;
@@ -183,12 +184,63 @@ module.exports = app => {
             })
             await app.kafkajs.esproducer.send({
                 topic: topic,
-                messages: [
-                    { value: 'Hello KafkaJS user one!' },
-                    { value: 'Hello KafkaJS user two!' },
-                    { value: 'Hello KafkaJS user three!' },
-                ],
+                messages: [{ value: 'Hello KafkaJS user one!' }, ],
             });
+        }
+
+        // 启用 sofa-rpc 服务
+        if (app.config.rpc.status && app.config.rpc.register) {
+
+            app.rpc = {};
+
+            // 1. 创建 zk 注册中心客户端
+            const registry = new ZookeeperRegistry({
+                logger: console,
+                address: app.config.rpc.registry.address, // 需要本地启动一个 zkServer
+            });
+
+            // 2. 创建 RPC Server 实例
+            const server = new RpcServer({
+                logger: console,
+                registry, // 传入注册中心客户端
+                port: app.config.rpc.server.port,
+            });
+
+            // 3. 添加服务，添加服务请不要在此次添加，直接在service里面调用app.rpc.server添加
+            server.addService(app.config.rpc.server, {
+                async method1(param1, param2, param3, param4, param5) {
+                    console.log(`param1:${param1} , param2:${param2}`);
+                    return param1 + param2;
+                },
+            });
+            // 4. 启动 Server 并发布服务
+            await server.start();
+
+            await server.publish();
+
+            /*************** *************** *************** ***************
+             *************** *************** *************** ***************/
+
+            // 5. 创建 RPC Client 实例
+            const client = new RpcClient({
+                logger: console,
+                registry,
+            });
+
+            app.rpc.server = server;
+            app.rpc.client = client;
+            app.rpc.registry = registry;
+
+            // 3. 创建服务的 consumer
+            const consumer = client.createConsumer(app.config.rpc.client);
+
+            // 4. 等待 consumer ready（从注册中心订阅服务列表...）
+            await consumer.ready();
+
+            // 5. 执行泛化调用
+            const result = await consumer.invoke('method1', [1, 2], { responseTimeout: 3000 });
+            console.log('1 + 2 = ' + result);
+
         }
 
     });

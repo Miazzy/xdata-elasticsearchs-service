@@ -567,16 +567,27 @@ module.exports = appInfo => {
         status: true,
     };
 
+    config.sofa = {
+        namespace: 'com.xdata.sofa.rpc.protobuf',
+    };
+
     config.rpc = {
-        registry: {
+        status: true,
+        register: true,
+        registry: { //zookeeper
             address: '172.18.254.95:32181',
         },
         client: {
+            namespace: `${config.sofa.namespace}`,
+            interfaceName: `${config.sofa.namespace}.ProtoService`,
             responseTimeout: 3000,
         },
+        server: {
+            namespace: `${config.sofa.namespace}`,
+            interfaceName: `${config.sofa.namespace}.ProtoService`,
+            port: 12200,
+        },
     };
-
-
 
     return {
         ...config,
