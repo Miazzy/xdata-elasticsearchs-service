@@ -565,7 +565,18 @@ module.exports = appInfo => {
 
     config.sentinelLimit = {
         status: true,
-    }
+    };
+
+    config.rpc = {
+        registry: {
+            address: '172.18.254.95:32181',
+        },
+        client: {
+            responseTimeout: 3000,
+        },
+    };
+
+
 
     return {
         ...config,

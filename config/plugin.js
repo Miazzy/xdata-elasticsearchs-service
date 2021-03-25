@@ -75,4 +75,9 @@ module.exports = {
         package: 'egg-etcd',
     },
 
+    sofaRpc: {
+        enable: true,
+        package: 'egg-sofa-rpc',
+    },
+
 };

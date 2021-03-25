@@ -39,6 +39,7 @@
         "egg-redis": "^2.4.0",
         "egg-redlock": "^1.0.0",
         "egg-redlock-plugin": "^1.0.0",
+        "egg-rpc-generator": "^1.3.1",
         "egg-scripts": "^2.11.0",
         "egg-sofa-rpc": "^3.0.0",
         "elasql": "^1.0.3",
