@@ -4,7 +4,8 @@
     "description": "elasticsearch service",
     "private": true,
     "egg": {
-        "declarations": true
+        "declarations": true,
+        "framework": "sofa-node"
     },
     "dependencies": {
         "@apla/clickhouse": "^1.6.4",
@@ -15,6 +16,7 @@
         "buffer": "^5.6.0",
         "cache-manager-ioredis": "^2.1.0",
         "clickhouse": "^2.2.1",
+        "colors": "^1.4.0",
         "compressing": "^1.5.1",
         "dayjs": "^1.9.6",
         "egg": "^2.15.1",
@@ -39,7 +41,6 @@
         "egg-redis": "^2.4.0",
         "egg-redlock": "^1.0.0",
         "egg-redlock-plugin": "^1.0.0",
-        "egg-rpc-generator": "^1.3.1",
         "egg-scripts": "^2.11.0",
         "egg-sofa-rpc": "^3.0.0",
         "elasql": "^1.0.3",
@@ -58,6 +59,8 @@
         "read-excel-file": "^4.0.7",
         "sequelize": "^6.3.5",
         "sinek": "^10.0.0-alpha.0",
+        "sofa-node": "^1.0.1",
+        "sofa-rpc-node": "^1.20.0",
         "sql2es": "^0.0.6",
         "superagent": "^6.1.0",
         "tedious": "^9.2.1",
@@ -71,6 +74,7 @@
         "egg-bin": "^4.11.0",
         "egg-ci": "^1.11.0",
         "egg-mock": "^3.21.0",
+        "egg-rpc-generator": "^1.3.1",
         "eslint": "^5.13.0",
         "eslint-config-egg": "^7.1.0",
         "rollup-plugin-babel": "^4.4.0",
@@ -101,7 +105,8 @@
         "cov": "egg-bin cov",
         "lint": "eslint .",
         "ci": "npm run lint && npm run cov",
-        "autod": "autod"
+        "autod": "autod",
+        "rpc": "egg-rpc-generator"
     },
     "ci": {
         "version": "10"

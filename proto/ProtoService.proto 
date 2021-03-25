@@ -1,0 +1,23 @@
+# ProtoService.proto 
+syntax = "proto3";
+
+package com.xdata.sofa.rpc.protobuf;
+
+option java_multiple_files = true; // 可选
+option java_outer_classname = "ProtoServiceModels"; // 可选
+
+service ProtoService {
+    rpc execute (EchoRequest) returns (EchoResponse) {}
+}
+
+message EchoRequest {
+    string name = 1;
+    string type = 2
+    string content = 3;
+}
+
+message EchoResponse {
+    int32 code = 1;
+    string message = 2;
+    string content = 3;
+}
