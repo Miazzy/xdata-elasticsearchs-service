@@ -88,7 +88,7 @@ function createMySQLClient(config, app) {
     return client;
 }
 
-module.exports = app => {
+module.exports = (app, ctx) => {
 
     // 开始前执行
     app.beforeStart(async() => {
@@ -206,22 +206,7 @@ module.exports = app => {
                 port: app.config.rpc.server.port,
             });
 
-            // 3. 添加服务，添加服务请不要在此次添加，直接在service里面调用app.rpc.server添加
-            server.addService(app.config.rpc.server, {
-                async method1(param1, param2, param3, param4, param5) {
-                    console.log(`param1:${param1} , param2:${param2}`);
-                    return param1 + param2;
-                },
-            });
-            // 4. 启动 Server 并发布服务
-            await server.start();
-
-            await server.publish();
-
-            /*************** *************** *************** ***************
-             *************** *************** *************** ***************/
-
-            // 5. 创建 RPC Client 实例
+            // 3. 创建 RPC Client 实例
             const client = new RpcClient({
                 logger: console,
                 registry,
@@ -230,16 +215,6 @@ module.exports = app => {
             app.rpc.server = server;
             app.rpc.client = client;
             app.rpc.registry = registry;
-
-            // 3. 创建服务的 consumer
-            const consumer = client.createConsumer(app.config.rpc.client);
-
-            // 4. 等待 consumer ready（从注册中心订阅服务列表...）
-            await consumer.ready();
-
-            // 5. 执行泛化调用
-            const result = await consumer.invoke('method1', [1, 2], { responseTimeout: 3000 });
-            console.log('1 + 2 = ' + result);
 
         }
 
